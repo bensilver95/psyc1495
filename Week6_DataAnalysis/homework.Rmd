@@ -1,0 +1,86 @@
+---
+title: "Lab Assignment DUE 10/29"
+output: html_document
+---
+
+Welcome to your homework. Time to do some descriptive and inferential statistics!!
+
+For this homework assignment, we'll be sticking with the education theme and working with a dataset on Pell grants. In case you don't know, Pell grants are one of the main ways the federal government provides financial aid for higher education to low-income students. The number of Pell grants that a school receives can often be a good indication of the number of low-income students at that school.
+
+This data only goes up to 2017 (starting in 1999), so even if you yourself have Pell grants, you aren't included in this dataset.
+
+This data is from [here](https://github.com/rfordatascience/tidytuesday/tree/main/data/2022/2022-08-30), where you can learn more about what each column means.
+
+### Question 1
+
+Let's load in `tidyverse` and read in `pell.csv`.
+
+```{r}
+
+```
+
+### Question 2
+
+Create a new dataframe that tells us the average number of Pell grant recipients in each year, in each state.
+
+```{r}
+
+```
+
+### Question 3
+
+Create another summary dataframe that tells us, for each school in NY, the average amount of Pell money a school has received (Hint: This means averaging over all years in the dataset), as well as the standard deviation of award amount.
+
+```{r}
+
+```
+
+### Question 4
+
+Plot a histogram of the number of Pell recipients at Columbia. (There are many schools across the country with Columbia in the name, so be specific when filtering.)
+
+```{r}
+
+```
+
+### Question 5
+
+Let's dive into some inferential statistics.
+
+Using formula notation, run an independent samples t-test comparing the number of Pell grant recipients in NY to the number of Pell grant recipients in another state - your choice!
+
+```{r}
+
+```
+
+### Question 6
+
+Now run another independent samples t-test, again using formula notation, comparing the amount of Pell grant dollars in a state of your choice in 2000 to the amount of Pell grant dollars in that same state in 2010.
+
+```{r}
+
+```
+
+### Question 7
+
+Run a linear regression that models how the number of Pell grant recipients changes over time at Columbia.
+
+```{r}
+
+```
+
+### Question 8
+
+In the space below, explain what your linear regression shows in plain language. Is there an effect of time? In which direction? How do you know?
+
+### Question 9
+
+Let's bring it all together. Run a linear regression with two predictors: year and state. Your DV is number of Pell grant recipients. For state, you're comparing between two states. You can pick which states you'd like to compare.
+
+```{r}
+
+```
+
+### Question 10
+
+Again, explain your results. Are there any main effects or interactions? How do you know?

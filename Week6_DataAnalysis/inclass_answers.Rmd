@@ -1,0 +1,392 @@
+---
+title: "In class tutorial 10/20"
+output: html_document
+---
+
+We now begin the final coding module of our course - data analysis and visualization.
+
+In the first few weeks of the course, we learned **coding basics**. We learned what a dataframe is, how to read in data, and some basic data cleaning/manipulation.
+
+In the next few weeks, we learned about **different kinds of data** and **different ways of accessing data**, such as web scraping, text data, and GIS data.
+
+NOW, for the remainder of the course, we turn towards actually **doing data analysis**. Today's tutorial will involve the following:
+
+-   Descriptive statistics
+
+-   Basic visualization
+
+-   t-tests
+
+-   Linear regression
+
+## Descriptive statistics
+
+When we get a new dataset, the first thing we want to do, before looking at relationships between variable, is understand the structure of our data. We want to be able to *describe* it before we can make *inferences* about it.
+
+We're going to start today's lesson by using a dataset from [New York State's open data platform](https://data.ny.gov/) (which is even more extensive than NYC's) about enrollment in public New York State universities (aka the SUNY system).
+
+### Getting started
+
+First things first: As always, load in the `tidyverse` package and read in the `SUNY_enrollment.csv` file.
+
+```{r}
+library(tidyverse)
+suny_raw <- read_csv('SUNY_enrollment.csv')
+```
+
+Take a look at the data. There is one weird quirk of the way this data is organized. Can you figure out what's going on?
+
+...
+
+Okay, here's the answer. The dataset has, as separate rows, summations of each type of institution, for each year. You can tell because there are certain rows where a specific institution name is not listed, and the numerical columns are much higher than all the others (because their sums).
+
+We don't need these rows - if we want to calculate sums, we can do them on our own. Right now, these sum rows only serve to obscure the true nature of our data. Any idea why?
+
+...
+
+Well, if we wanted to calculate the mean of a column that includes a row that is a sum of the other rows, that isn't a true representation of what our data looks like.
+
+So let's get rid of rows that have no specific institution listed. To do so, we're going to use `filter()` and `is.na()`. We'll use the `!` symbol, which means "NOT" to specify that we want to save rows where the `Institution_Name` column is NOT NA.
+
+```{r}
+suny <- suny_raw %>% 
+  filter(!is.na(Institution_Name))
+```
+
+### Basic summaries
+
+There are a couple of functions we can use right off the bat to make sense of our data. Let's start with `str()` which shows the basic structure of the dataframe.
+
+```{r}
+str(suny)
+```
+
+It's not the prettiest output, but you can immediately see what all the columns are, what the first view values are, and what type of data each column is. Remember, "num" is numerical data that we can do math (and statistics) with, and "chr" refers to "character" data, which is letters and strings.
+
+Another useful function is `summary()`, which gives you the mean, median, and quartiles of numerical columns.
+
+```{r}
+summary(suny)
+```
+
+### Grouped summaries
+
+However, this isn't the most useful, because we have so many different types of data, and it would be better if we could group by those factors. Let's use `group_by()` and `summarize()` (different from `summary()` - I know, confusing) to create a NEW dataframe with the means broken down by year and institution type. Remember that you can group by **multiple things at once**.
+
+```{r}
+suny_sum <- suny %>% 
+  group_by(Year, Institution_Type) %>% 
+  summarize(undergrads_ft = mean(Undergraduate_FullTime))
+```
+
+Hmm...some rows are coming up as NA. Why might that be?
+
+...
+
+Because some of those schools don't have any undergraduates! Not all of them are graduate only, but remember that if any rows have NA that go into our mean calculation, then our mean will be calculated as NA. We can deal with that with the `na.rm = T` argument.
+
+```{r}
+suny_sum <- suny %>% 
+  group_by(Year, Institution_Type) %>% 
+  summarize(undergrads_ft = mean(Undergraduate_FullTime,na.rm = T))
+```
+
+So that looks a lot cleaner. But is it really more accurate? What's happening now is that when we calculate the mean, we ignore rows for schools with no graduate students. What's another way of dealing with those missing values instead of just ignoring them?
+
+...
+
+One thing we can do is replace all NAs with 0s. Of course, this is risky: We don't know if every NA is truly a 0, or if it really is an instance of missing data. These are decisions that **do not have clear correct answers**, and that you as a researcher have to decide based on your intuition/prior knowledge.
+
+**It also depends on your question.** Maybe your question demands that you only consider graduate institutions that also have undergrads. In that case, we *would* want to exclude empty rows.
+
+Personally, I think this data looks really clean, and so "missing" data is likely to just be a 0. So let's re-calculate the means after replacing NAs with 0. Remember that using the `%>%` symbol (called the pipe) we can easily string together commands.
+
+```{r}
+suny_sum <- suny %>% 
+  mutate(Undergraduate_FullTime = replace_na(Undergraduate_FullTime,0)) %>% 
+  group_by(Year, Institution_Type) %>% 
+  summarize(undergrads_ft = mean(Undergraduate_FullTime,na.rm = T))
+```
+
+In addition to grouping by multiple factors at once, you can also make multiple new summary columns at once in `summarize()`. You can also mutate multiple columns at once using `mutate()`.
+
+```{r}
+suny_sum <- suny %>% 
+  mutate(Undergraduate_FullTime = replace_na(Undergraduate_FullTime,0),
+         Graduate_FullTime = replace_na(Graduate_FullTime,0)) %>% 
+  group_by(Year, Institution_Type) %>% 
+  summarize(undergrads_ft = mean(Undergraduate_FullTime,na.rm = T),
+            grads_ft = mean(Graduate_FullTime,na.rm = T))
+```
+
+Again, it's not super clear if it's useful to replace NAs with 0, and the answer might be different for our undergraduate mean and our graduate mean. Again, it all comes back to our **question** and what we want to know.
+
+One thing that might help clarify what's going on with our data and what it looks like would be to also include the standard deviation in our `suny_sum` data frame. Luckily, there's an easy function to calculate standard deviation: `sd()`.
+
+```{r}
+suny_sum <- suny %>% 
+  mutate(Undergraduate_FullTime = replace_na(Undergraduate_FullTime,0),
+         Graduate_FullTime = replace_na(Graduate_FullTime,0)) %>% 
+  group_by(Year, Institution_Type) %>% 
+  summarize(undergrads_ft = mean(Undergraduate_FullTime,na.rm = T),
+            grads_ft = mean(Graduate_FullTime,na.rm = T),
+            undergrads_ft_sd = sd(Undergraduate_FullTime,na.rm = T),
+            grads_ft_sd = sd(Graduate_FullTime,na.rm = T))
+```
+
+Now we can see how spread out our data is. One SD in a normal distribution is equal to 34% of the data, so 68% of our data is within 1 SD of the mean (1 SD below the mean to 1 SD above).
+
+That's a pretty sweet summary table we've created. We can structure summary tables in whichever way is useful for our question. For example, maybe instead of institution types, we want to know about specific schools. We could make a summary table that just tells us average and SD of enrollment at each school, across all years in our data.
+
+```{r}
+suny_sum_schools <- suny %>% 
+  mutate(Undergraduate_FullTime = replace_na(Undergraduate_FullTime,0)) %>% 
+  group_by(Institution_Name) %>% 
+  summarize(undergrads_ft = mean(Undergraduate_FullTime,na.rm = T),
+            undergrads_ft_sd = sd(Undergraduate_FullTime,na.rm = T))
+```
+
+You can also group by multiple columns, even if the columns don't actually matter to further differentiate your data. This allows you to simply keep the column in your summary table.
+
+```{r}
+suny_sum_schools <- suny %>% 
+  mutate(Undergraduate_FullTime = replace_na(Undergraduate_FullTime,0)) %>% 
+  group_by(Institution_Name, Institution_Type) %>% 
+  summarize(undergrads_ft = mean(Undergraduate_FullTime,na.rm = T),
+            undergrads_ft_sd = sd(Undergraduate_FullTime,na.rm = T))
+```
+
+The numbers haven't changed - because each institution name is only associated with one institution type. But now we at least know what the institution type is.
+
+Another useful function is `range()`, which gives us the min and max of our data.
+
+```{r}
+range(suny_sum_schools$undergrads_ft)
+```
+
+Hmm....why does it start at 0? Oh yeah, because there's that one graduate school that has NO undergrads. Let's get rid of it here, just so we can see a more informative range. Again, whether or not it matters is dependent on our question.
+
+```{r}
+suny_sum_schools <- suny_sum_schools %>% 
+  filter(undergrads_ft != 0)
+
+range(suny_sum_schools$undergrads_ft)
+```
+
+## Basic visualization
+
+Before moving to inferential statistics, it can also be useful to **visualize** the spread of our data. R has one super simple way to do this, using a function called `hist()`, where the only argument is the column you want to plot. This will automatically plot a histogram.
+
+```{r}
+hist(suny_sum_schools$undergrads_ft)
+```
+
+Interesting - we can see from this that our data is not really normally distributed, and there are some outliers with exceptionally high numbers of students. One thing that might be useful is to increase the number of "breaks", which essentially means how many bars `hist()` breaks the data into.
+
+```{r}
+hist(suny_sum_schools$undergrads_ft, breaks = 20)
+```
+
+It also might be useful to visualize a smaller range of the data, especially when there are outliers. You can do this using the `xlim` argument.
+
+```{r}
+hist(suny_sum_schools$undergrads_ft, breaks = 20,xlim = c(0,9000))
+```
+
+You can make this graph look prettier by changing the label names and the colors, but we're not going to get into that here, because the best way to make plots is by using `ggplot`, which is a little more complicated. We'll do a whole `ggplot` tutorial - including histograms, bar graphs, scatter plots, and lines of best fit - next week.
+
+## T-tests
+
+The t-test is one of the simplest tools we have to make *inferences* about our data. This is not a stats class, so we will not go in depth into what a t-test means (But see our slides from 10/13's class for some more details). Essentially, what you need to know is that **a t-test tells us whether or not a difference in the DV between two groups is meaningful, or significant.**
+
+There are several different kinds of t-tests we can do, all with the function `t.test()`. And there are a few different ways of using `t.test()` based on the structure of our data.
+
+### One-sample t-tests
+
+The simplest kind of t-test is a **"one-sample t-test".** In this t-test, we're not comparing two groups to each other. Instead, we're asking *if the values for the one group we have are meaningfully greater than 0.*
+
+Let's first ask if, on average, Technology Colleges have more than 0 graduate students. If we look at our data, most do not have any, but a few do. First, we have to limit our data to just Technology Colleges. Then, we have to change NAs to 0s.
+
+```{r}
+suny_tech <- suny %>% 
+  filter(Institution_Type == 'Technology Colleges') %>% 
+  mutate(Graduate_FullTime = replace_na(Graduate_FullTime,0))
+```
+
+Finally, we run a one-sample t-test on the `Graduate_FullTime` column.
+
+```{r}
+t.test(suny_tech$Graduate_FullTime)
+```
+
+Okay, let's interpret this output. We get three primary pieces of information:
+
+-   **The t value.** This is calculated using the mean and standard error. You don't need to worry about how we got this value, just know that numbers farther from 0 mean larger effects.
+
+-   **The degrees of freedom (df).** This is a measure of certainty, and is often related to how big our sample size is.
+
+-   **The p-value.** Remember, in Psychology, we treat p-values under 0.05 as significant. This p-value is written in scientific notation, and is actually equal to 0.00000591. Much smaller than 0.05!
+
+The output also gives us the range of values encompassed by 95% of the t-test's estimates, and what the mean value actually is (15.01).
+
+### Two-sample t-tests
+
+The next thing we can do with a t-test is ask if two groups are meaningfully different from each other. To do so, we use a **two-sample t-test.**
+
+Let's ask if, at Community Colleges, there are more full time or part time undergraduates. To do this, we need to filter our data to just be community colleges, and then run a t-test, where we indicate each column as its own group.
+
+```{r}
+suny_cc <- suny %>% 
+  filter(Institution_Type == 'Community Colleges')
+
+t.test(suny_cc$Undergraduate_FullTime,
+       suny_cc$Undergraduate_PartTime)
+```
+
+What do our results tell us?
+
+...
+
+There is **NOT** a significant difference between full and part time undergrads at community colleges. Although, which one is higher, and how can you tell? Go through the output carefully.
+
+But wait! What we've just done is called an **independent samples t-test**. Essentially, it takes all of the data in one column, and compares it to all of the data in the other column. This type of t-test is primarily used for between-subjects experiments.
+
+But is this between-subjects? No! In a way, it's within-subjects, because *each* school has *both* a full-time student and part-time student measure. So instead, we want to run a **paired samples t-test**, which will explicitly compare values within each school. To do so, we just need to add a `paired = T` argument to our `t.test()` function.
+
+```{r}
+t.test(suny_cc$Undergraduate_FullTime,
+       suny_cc$Undergraduate_PartTime,
+       paired = T)
+```
+
+Wow!! Look at how much larger the t-value is now, and how much lower the p-value is. This demonstrates the power of paired-sample t-tests and within-subjects experiments.
+
+Remember that our inferences become more certain the more data we have. What if we were to run this t-test on just Community College data from 2019?
+
+```{r}
+suny_cc_2019 <- suny_cc %>% 
+  filter(Year == 2019)
+
+t.test(suny_cc_2019$Undergraduate_FullTime,
+       suny_cc_2019$Undergraduate_PartTime,
+       paired = T)
+```
+
+We're back to not having a significant effect, partially because we have so much less data, so our estimates are much less certain.
+
+### Two sample t-tests with formulas
+
+What if we wanted to run a t-test to see if there were more full-time undergraduates at Community Colleges or Comprehensive Colleges?
+
+At first, it sounds simple. But if you look at our data, it's not quite so easy. Our arguments earlier were two different columns, and we compared across the columns. But we don't have two different columns for those two different types of institutions. Instead, we have all full-time undergraduate values in one column, and another column tells us what group they belong to.
+
+In a few weeks, we'll discuss what it means when data is in **"wide"** format vs **"long"** format. For now, what you need to know is that there is another type of syntax we can use with `t.test()` that utilizes X and Y variables, rather than two different groups.
+
+In this case, our X variable is Institution type: Community College vs Comprehensive College. Our Y variable is number of FT undergrads. We can use "formula notation" in `t.test()` to account for our data being structured this way.
+
+Let's first get rid of all schools that aren't Community or Comprehensive.
+
+```{r}
+suny_comm_comp <- suny %>% 
+  filter(Institution_Type %in% c("Community Colleges",
+                                 "Comprehensive Colleges"))
+```
+
+Now, we're ready to run our t-test with formula notation, which looks like `y ~ x`.
+
+```{r}
+t.test(Undergraduate_FullTime ~ Institution_Type, data = suny_comm_comp)
+```
+
+In this way, we're literally asking: How does X *affect* Y?
+
+Formula notation also makes it easy to filter our data. For example, if we wanted to look at this effect only in 2012, we can use the `filter()` function directly within the `data =` argument.
+
+```{r}
+t.test(Undergraduate_FullTime ~ Institution_Type, data = suny_comm_comp %>% 
+         filter(Year == 2012))
+```
+
+Play around with the year, and see if you notice any trends in Community College vs Comprehensive College enrollment.
+
+## Linear regression
+
+Final topic for today!
+
+Here's a secret. Almost all statistical tests you learn about - t-tests, F-tests, ANOVAs, correlations - can basically be accomplished by running a linear regression.
+
+A linear regression asks: **As my X value changes, how much does my Y value change?** If it doesn't change at all, then X *does not* affect Y. If it changes a lot, then X *does* affect Y. Basically, how steep is the slope of the line that best fits X to Y? Steeper slopes mean larger effects. At the end of the day, most simple inferential statistics can fit into this framework.
+
+### Simple linear regression
+
+To run a linear regression on our data, we're going to use the `lm()` function (which stands for linear model).
+
+The `lm()` function uses formula notation, so it works the same way as our last `t.test()` test. Copy and paste that code, and change `t.test` to `lm`.
+
+```{r}
+lm(Undergraduate_FullTime ~ Institution_Type, data = suny_comm_comp)
+```
+
+A bit anti-climactic. The output from `lm()` just tells us about how our model is set up. To see inferential statistics, we have to wrap the whole thing in `summary()`. (You can also assign the value of `lm()` to a variable, and then wrap that in `summary()`.
+
+```{r}
+summary(lm(Undergraduate_FullTime ~ Institution_Type, data = suny_comm_comp))
+```
+
+Okay, so what does this mean? Again, this isn't a stats class, but some basic pointers about interpreting this output.
+
+The most important thing you want to look at is the **"Coefficients"** section. The first row lists the Intercept value - you can ignore that for now. The second row lists your X variable. This row essentially tells you about what *effect* X has on Y, based on the predictive model that you've run with `lm()`.
+
+-   The **"Estimate"** column tells you how large the DV difference is between a single unit of your X variable. In this case, "a single unit" means the difference between your groups. What this tells you is that the number of FT undergrads at Comprehensive Colleges is 1400 more than the number of FT undergrads at Community Colleges.
+
+-   The next two columns give you the **standard error** and the **t-value**. Don't worry about these for this course.
+
+-   The last column gives you the **p-value**. Again, it's in scientific notation, so it's telling us our p value is 0.000000006. Not too shabby.....
+
+What's nice about linear regression is that it works the same depending on if our X variable is *categorical* (meaning we have two different groups, like in our last analysis) or *continuous*.
+
+So, what if we wanted to know if graduate enrollment at Doctoral Degree Granting Institutions has been increasing or decreasing over time? In this case, our X variable is time, or the `Year` column. Our Y variable is the `Graduate_FullTime` variable. Let's first make a new dataframe with just doctoral institutions, and then we can run our linear regression in exactly the same way we did before.
+
+```{r}
+suny_doctoral <- suny %>% 
+  filter(Institution_Type == 'Doctoral Degree Granting Institutions')
+
+summary(lm(Graduate_FullTime ~ Year, data = suny_doctoral))
+```
+
+So the first thing we notice is that the P value for year is NOT less than 0.05, which means that on average, enrollment at doctoral institutions is NOT *meaningfully* changing during this time. But that doesn't mean there's no change at all. Our model does predict some change, just not large enough that it's meaningfully different from 0. Can you tell what change our model is telling us is occurring?
+
+...
+
+Look at the **"Estimate"** column. Remember, the estimate tells us how much the DV changes as we change one unit of the IV. What is one unit of the IV now that our X variable is continuous? One year. So, our model tells us that each year, the number of graduate students at each institution on average increases by 33 students.
+
+Remember, this is a model estimate. It doesn't mean that there is exactly a 33-student increase at every school each year. But our model is *linear* - it's essentially trying to draw a line of best-fit between our Year variable and our grad student variable. That line of best fit has a slope of 33.29. One-unit increase in X leads to a 33.29 increase in Y.
+
+### Multiple regression
+
+One thing we discussed briefly in class is that in the real world, there are often MANY factors that might impact Y. Some of these we want to consider as X variables, and some of them we want to consider as confounds or **covariates**. With linear regression, we can build a model that accounts for all of our **predictors** (IVs and confounds) all at once. It can show us how much each predictor contributes to our Y value - essentially, what is the *effect* of each predictor? It can also show us *interactions* between predictors.
+
+So, what if we wanted to know how *both* `Year` and `Institution_Type` impact student enrollment? Specifically, let's see how full time undergraduate students change by year, and if that change differs between Technology Colleges and Comprehensive Colleges.
+
+First, we create a dataframe with just those two types of institutions. Then, we put both into our linear regression model as interacting predictors using the `*` symbol between them.
+
+```{r}
+suny_tech_comp <- suny %>% 
+  filter(Institution_Type %in% c('Technology Colleges',
+                                 'Comprehensive Colleges'))
+
+summary(lm(Undergraduate_FullTime ~ Year * Institution_Type,
+           data = suny_tech_comp))
+```
+
+Let's interpret our output. Ignoring the "Intercept" row, the "Coefficients" section now has 3 rows instead of just 1. **Each row corresponds to a possible effect: 2 main effects, and 1 interaction.**
+
+First, we see an effect of Year. Our Estimate for Year is decreasing, so this means that overall, enrollment is *decreasing* over time.
+
+We also see an effect of Institution Type, where Technology Colleges have *fewer* students than Comprehensive Colleges.
+
+Finally, there's an interaction. Interpreting the meaning of this interaction based on the estimate is confusing, and beyond the scope of this course, but essentially, it says that the slope of the Year-Student relationship is 108 units greater for Technology Colleges than for Comprehensive Colleges.
+
+Next time, we'll do some intense visualization practice, which will make tricky relationships like interactions clearer. We may also have time for more advanced linear regression in a few weeks - there are a few ways we can manipulate our data before we run a regression that make our output more interpretable.
+
+But all of that is for the future. For now, marvel at your accomplishments. You have learned today how to describe your data, visualize it, run a t-test on it, and run a linear regression on it. Bravo!
