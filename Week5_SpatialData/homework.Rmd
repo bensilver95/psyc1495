@@ -1,0 +1,103 @@
+---
+title: "Lab assignment DUE 10/15"
+output: html_document
+date: "2025-10-07"
+---
+
+Welcome to your homework for this week. It's time to make some beautiful maps on your own.
+
+Make sure that you're actually **attempting** to run each of these code chunks, and trying to *figure out why it doesn't work* if you get an error. You don't need to knit, but I'll be looking to see if you've saved out new objects/variables/dataframes that you are supposed to have created. I need to see evidence that you've at least put in some **effort** to make it work - otherwise, I'll have to take off points.
+
+For this homework, our goal is to make a map showing the number of pedestrian plazas in each State Assembly district in Manhattan. As defined by the NYC Department of Transportation, pedestrian plazas are "reclaimed streets transformed into vibrant, social public spaces for all to enjoy. Plazas enhance safety, walkability, and access to public transit while supporting community, commerce, and culture."
+
+This homework is on the harder side, but except for Question 4, a version of every single thing you need to do can be found in our in-class tutorials (mostly from this past week, but occasionally from other weeks as well).
+
+#### Question 1
+
+First, load all the packages that you'll need for this tutorial: `tidyverse`, `sf`, and `tigris`.
+
+```{r}
+
+```
+
+#### Question 2
+
+Using `tigris`, download the State Assembly districts for New York (Hint: There is a `tigris` function for downloading the shape files for state legislative districts - you can see all the `tigris` functions [here](https://github.com/walkerke/tigris) - and you can use the argument `house = "lower"` to only get State Assembly districts).
+
+```{r}
+
+```
+
+#### Question 3
+
+Use `tigris` again to download the counties in NYS, and then use `filter()` to get rid of all counties except New York county (Manhattan).
+
+```{r}
+
+```
+
+#### Question 4
+
+New function alert! But I believe in you. Use `st_intersection()` to create a new object that only shows State Assembly districts in Manhattan. (Hint: `st_intersection()` has two arguments, where the first argument is the object you created when downloading Assembly Districts in NYS, and the second argument is the object you created that contains just shape file info for New York county. `st_intersection()` works by finding the intersection between these two files.)
+
+```{r}
+
+```
+
+#### Question 5
+
+Using `geom_sf()`, plot a map of Manhattan, showing the borders of the State Assembly districts. (Hint: `geom_sf()` works with `ggplot()`.
+
+```{r}
+
+```
+
+#### Question 6
+
+Read in the file called `pedestrian_plazas.csv`.
+
+```{r}
+
+```
+
+#### Question 7
+
+Create a new data frame that shows the number of pedestrian plazas in each Assembly District. (Hint: To do this, you'll want to "group by" Assembly District, and then use the `count()` function to count how many there are for each. We've done this in previous tutorials.)
+
+```{r}
+
+```
+
+#### Question 8
+
+Now, use `left_join()` to join your object that lists assembly districts in Manhattan with your object that shows how many pedestrian plazas there are in each assembly district. (Hint: The assembly district column likely has a different name in each object, so you'll need to use the `by =` argument to specify which columns to join by. We did this in class.)
+
+```{r}
+
+```
+
+#### Question 9
+
+Take a look at your new data frame. If you look at the `n` column, which shows the count, you'll see that there are some NAs, because not all Assembly Districts have pedestrian plazas, so they weren't listed in your object where you counted them up. Let's use `mutate()` and `replace_na()` to change those NAs into 0s.
+
+```{r}
+
+```
+
+#### Question 10
+
+Plot the map of Manhattan Assembly Districts, but this time, make it so that the color of each district corresponds to the number of pedestrian plazas. (Hint: Within `geom_sf()`, you'll need to type `aes(fill = n)`
+
+```{r}
+
+```
+
+#### Question 11
+
+Make your map look prettier by changing the scale colors. You can see the list of named colors that R will accept [here](https://r-charts.com/colors/). (Hint: To do this, add `scale_fill_continuous()` as another layer to your `ggplot` call.)
+
+```{r}
+
+```
+
+#### 

@@ -1,0 +1,193 @@
+---
+title: 'In class tutorial: Working with spatial data'
+output: html_document
+---
+
+Learning how to work with and visualize spatial data could be an entire class in and of itself. It's a vast field - variously referred to as GIS (geographic information system), geospatial mapping, etc.
+
+We don't have time in this class to learn basic principles of GIS data and build up from there. Instead, you're going to learn how to make some cool visualizations of location-based data, and the associated concepts, such as the difference between points and polygons, or what a choropleth is.
+
+This tutorial includes the following two sections:
+
+-   Using the `usmap` package to make simple maps of places in the US at either the state or county level
+-   Using `tigris` and `sf` to make more complex maps with shape files
+
+If you ever get bored and want to learn more about the `sf` package, you can do so [here](https://r-spatial.github.io/sf/index.html).
+
+## Simple map plots with usmap
+
+There are many different packages we can use for working with spatial data. One really simple thing we can do, though, is use the `usmap` package to make a simple map. Let's load that in now, along with `tidyverse`, which we'll need. Also, for some reason, working with GIS data in Posit Cloud causes a lot of messy warnings to appear. We're going to try to get rid of some of those by changing our warnings setting for this session.
+
+```{r}
+library(usmap)
+library(tidyverse)
+options(warn = -1)
+```
+
+We can plot a map of the US with one simple command:
+
+```{r}
+
+plot_usmap(regions = 'states')
+```
+
+Ta da! You're done. Now you know how to create maps in R.
+
+Just kidding. There's a lot more to do! You can show specific states or counties with the `include` argument.
+
+```{r}
+plot_usmap(regions = 'counties',include = c('NY','NJ'))
+```
+
+If you want to include specific counties, you can use what's called a **FIPS code**. Every state and county has its own FIPS code, and it's good to use those when working with spatial data. We actually saw FIPS codes a few weeks ago: the `tidycensus` package returns a variable called `GEOID`, which has the FIPS code for whatever geographic area you've collected. You can also easily look up FIPS codes on Google.
+
+Making blank maps is one thing, but what's better is plotting data *on the map*. There are two kinds of data you can plot. First, we can make a **choropleth** map, which means coloring regions according to some sort of data.
+
+For example, `usmap` actually comes with a few datasets, such as `countypov`, which contains simple data on poverty rates by county. Take a look at it below.
+
+```{r}
+countypov
+```
+
+Notice the FIPS column? `usmaps` makes it really easy to combine data with a FIPS column with the mapping function.
+
+```{r}
+plot_usmap(regions = 'counties',include = c('NY','NJ'), data = countypov, values = "pct_pov_2021")
+```
+
+Let's use FIPS codes to Zoom in on NYC. You can figure out what the FIPS codes are by Googling.
+
+```{r}
+plot_usmap(regions = 'counties',include = c(36061,36047,36081,36005,36085), data = countypov, values = "pct_pov_2021")
+```
+
+Whoops, Staten Island is cut off by our legend. This is a good opportunity to introduce some tools to change the *appearance* of your map.
+
+`usmap` combines with the `ggplot` package to make visualizations. The `ggplot` package, which is part of the `tidyverse`, is used to create figures and graphs and visualizations in R. It is incredibly powerful and is by far my *favorite package* in all of R. We'll learn about `ggplot` in more depth in a few weeks when we start talking about data visualization. Today, you're only going to learn commands as they're necessary for making our map better. Let's move the legend over and change our colors.
+
+```{r}
+plot_usmap(regions = 'counties',
+           include = c(36061,36047,36081,36005,36085), 
+           data = countypov, 
+           values = "pct_pov_2021") +
+  scale_fill_continuous(low = 'black',high = 'red') + # ggplot syntax
+  theme(legend.position = 'right') # ggplot syntax
+```
+
+Remember, you can use any data here, as long as it has a column called `fips` (and if it doesn't, you can create it!).
+
+The other type of plot we might want to make is to **plot points** corresponding to individual entities. This is technically possible to do in `usmap`, but it doesn't work very well. To plot coordinates, we have to use a slightly more complex solution: working with **shape files**.
+
+## Shape files
+
+Shape files are a special file type used in GIS plotting. They convey a bunch of information about the locations of borders and objects, and are the basis of drawing *geographic shapes*. Their specific makeup and how they work are beyond the things you need to know (and that I need to know) for most GIS uses, as an R package called `sf` can easily read them for you. (`sf` is the premiere fancy package that people use for working with GIS data and building maps.)
+
+Now, where do we *get* these shape files? There are many sources online that highlight different spatially-specific datapoints. But first, we're mostly going to keep it simple and access shape files using a package called `tigris`. Let's load `tigris` and `sf` now.
+
+```{r}
+library(tigris)
+options(tigris_use_cache = TRUE)
+
+library(sf)
+```
+
+`tigris` can access a ton of different features of a map. You can see the full list [here](https://github.com/walkerke/tigris). It includes things like *states*, *counties*, and *congressional districts*, but it can get even more specific and download features like *roads* or *landmarks*. Let's start by accessing the counties shape file for New York.
+
+```{r}
+ny_counties <- counties(state = "NY", cb = TRUE)
+```
+
+Setting `cb` to `TRUE` simplifies the data and makes it run faster.
+
+We can plot this using `ggplot()` and the `geom_sf()` command, which comes from the `sf` package. `ggplot` works by using the `+` sign. It's quite intuitive - we're essentially adding layers of objects together to make one cohesive graph.
+
+```{r}
+ggplot() +
+  geom_sf(data = ny_counties)
+```
+
+Looking good. Notice how the axes are coordinates? `ggplot` automatically picks up on that from the nature of the data in the shape file. We can make the plot look a little nicer by adding a layer called `theme_void()` that shows us the map just floating in space.
+
+```{r}
+ggplot() +
+  geom_sf(data = ny_counties) +
+  theme_void()
+```
+
+We can show just the counties in NYC by subsetting the FIPS codes, which are called `GEOID` in the `ny_counties` object we just made. To do this, we'll use `filter()` and the `%in%` syntax.
+
+```{r}
+nyc_counties <- ny_counties %>% 
+  filter(GEOID %in% c(36061,36047,36081,36005,36085))
+
+ggplot() +
+  geom_sf(data = nyc_counties) +
+  theme_void()
+```
+
+We can make a plot similar to the one we made earlier by combining the `countypov` object with our new `nyc_counties` object. We'll use `left_join()` to do so, and we'll specify which two columns to join on, since they have *different names* in each of the two data frames we're joining.
+
+```{r}
+nyc_counties_pov <- nyc_counties %>% 
+  left_join(countypov,
+            by = c('GEOID' = 'fips'))
+```
+
+Now we'll go back to `ggplot` and tell it that the color fill should be according to the poverty level variable. To do this, we use the `aes()` function within `geom_sf`. `aes()` is how we tell `ggplot` what data we're using in our plot. Again, don't worry about exactly how `ggplot` works for today. We'll go over that in more detail in a few weeks.
+
+```{r}
+ggplot() +
+  geom_sf(data = nyc_counties_pov,
+          aes(fill = pct_pov_2021)) +
+  theme_void()
+```
+
+Okay, so we've recreated our choropleth plot from the `usmap` package, this time using shape files accessed from `tigris`.
+
+Let's now plot specific points on our map. To demonstrate plotting points, let's use the `2019_schools.csv` file, which contains location data for all schools in NYC in 2019.
+
+```{r}
+schools <- read_csv('2019_schools.csv')
+schools
+```
+
+Take a look at the dataframe and its contents.
+
+To plot the coordinate points for each school, we simply add a new layer to our `ggplot` call.
+
+```{r}
+ggplot() +
+  geom_sf(data = nyc_counties_pov,
+          aes(fill = pct_pov_2021)) +
+  geom_point(data = schools,aes(x = LONGITUDE, y = LATITUDE)) +
+  theme_void()
+```
+
+Ooh la la! Let's change a few visualization parameters to make it look nicer. We'll change the color, and the alpha level, which controls how opaque the dots are.
+
+```{r}
+ggplot() +
+  geom_sf(data = nyc_counties_pov,
+          aes(fill = pct_pov_2021)) +
+  geom_point(data = schools,aes(x = LONGITUDE, y = LATITUDE),
+             alpha = .2, color = 'white') +
+  theme_void()
+```
+
+One last thing with shape files. Although in our previous example we accessed them with code via `tigris`, shape files are just regular files that can be downloaded from anywhere, and read in using the `st_read()` function from `sf`.
+
+Let's try doing that with a shape file that I've downloaded for you from NYC open data, that has information on the locations of trees that were planted as part of an initiative called MillionTreesNYC. The shape file (.shp) is actually one file of many that need to be read all at once in order for `sf` to make sense of the data. I've put all of these files in a folder called "nyc_trees". To read the file, just use `st_read()` with the folder name as the only argument.
+
+```{r}
+nyc_trees <- st_read('nyc_trees')
+```
+
+Then, we can plot it on top of our NYC county shape file by adding another layer to our `ggplot()` call.
+
+```{r}
+
+ggplot() +
+  geom_sf(data = nyc_counties_pov,aes(fill = pct_pov_2021)) +
+  geom_sf(data = nyc_trees, color = 'lightgreen') +
+  theme_void()
+```
