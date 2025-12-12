@@ -1,0 +1,264 @@
+---
+title: "In class tutorial - Text data"
+output: html_document
+---
+
+In today's tutorial, we're going to learn about working with **text data**. Text data is important because the real world is filled with text - the news, social media, reports, etc. However, text data is also much messier than numerical data - while we can immediately do math with numerical data, we have to first *make sense* of our text data before we can quantify it or draw any conclusions about it.
+
+Luckily, there are many functions in R - as well as entire packages - that can help us work with text data. Today's tutorial will touch on the following:
+
+-   Simple text commands using functions from `stringr`
+
+-   More complex search through text using regular expressions
+
+-   Using the package `tidytext` to understand word frequencies, sentiment analysis, and topics
+
+For this tutorial, we're going to be working with a dataset that contains news headlines from *Huffington Post* news articles, from 2018 through 2022.
+
+***Note:*** If you ever get bored during this tutorial and want to enrich your learning, here are some resources you can explore:
+
+-   [text mining with tidytext](https://www.tidytextmining.com/)
+
+-   [Regular expressions](https://stringr.tidyverse.org/articles/regular-expressions.html)
+
+-   [General tutorial](https://cengel.github.io/R-text-analysis/)
+
+Let's begin by loading in the `tidyverse` package, and then loading in the News Headlines file.
+
+```{r}
+
+```
+
+## Basic stringr functions
+
+First, take a look at the dataset. What information does it contain? Which columns contain useful text data, and which are other types of data?
+
+One very simple thing we might want to do with text data is ask how long it is. Length of a text - although it doesn't tell us anything about its content - can be indicative of different psychological variables, such as effort or complexity.
+
+### Text length
+
+Let's create a new variable that tells us how many words are in each headline. To do this, we'll use the `str_count()` function, which comes from the `stringr` package, which is itself a sub-package of `tidyverse`. `str_count()` has two arguments: the column you want to count text in, and the character(s) you're looking to count. What character should we count that would indicate approximately how many words a text has?
+
+```{r}
+
+```
+
+There's actually a slightly more accurate way to do this, built into `stringr`, using an argument called `boundary('word')`.
+
+```{r}
+
+```
+
+We're going to look at some things broken down by year, so let's create a new column that tells us what the year is for each headline. The `date` column is a special kind of data called "datetime" which means that R understands it as providing us with a date, and so we can use some special functions to work with it. Let's use the `year()` function to extract the year.
+
+```{r}
+
+```
+
+There are a lot of cool functions for "datetime" data - you can extract the month and day, you can change the format of the date, etc.
+
+As a review of some other functions we've learned, what would we do if we wanted to get the average headline length for each year?
+
+```{r}
+
+```
+
+Hooray for consistency from the Huffington Post.
+
+### Detecting a substring
+
+It can also be useful to see if a particular word is present in a text. To do so, we can use the `str_detect()` function, which works similarly to `str_count()` in terms of the arguments provided: the text column, and then the substring you're trying to detect.
+
+```{r}
+
+```
+
+Now we have a new column that tells us whether or not a headline mentions Trump. You can do this with any word or any substring, and it can be useful to know how often across texts a certain word is mentioned.
+
+Certain words might also be more common in certain types of texts than others. For example, in our dataset, we have a column that gives us the category of news. Perhaps certain words are more common in certain categories.
+
+There are some more specific versions of `str_detect()`, such as `str_starts()` and `str_ends()`.
+
+```{r}
+
+```
+
+### Manipulating text
+
+Sometimes it can also be useful to change your text for later analyses. For example, let's say you want to detect the presence of the word "prison", but sometimes it's uppercase and sometimes it's lowercase. To deal with this problem, it's usually a good idea to change the case of all words in your string:
+
+```{r}
+
+```
+
+There are also functions called `str_to_upper()`, `str_to_title()` (which capitalizes the first letter of each word) and `str_to_sentence()` (which capitalizes just the first letter of a sentence).
+
+You may also want to replace words in your text. For example, say you have data that is from both the US and the UK, and you want to detect the presence of the word "color", but it's sometimes spelled "colour" in the UK data. You could use the `str_replace_all()` function to deal with that:
+
+```{r}
+
+```
+
+## Regular expressions
+
+When working with text, we sometimes want to look for or replace very complex, specific characters, based on how messy our text is and how it's structured. Regular expressions is a language of sorts that makes it easy for us to look for very specific sequences of text. It's endlessly complicated, so we'll just scratch the surface in this tutorial.
+
+For simplicity's sake, let's work with a new object that just contains the first five headlines in our data:
+
+```{r}
+
+```
+
+One important character in regex (regular expressions) is the `.` - it basically says to look for anything in that position. This can be a useful way to get more specific in our string search. Let's use the `str_view()` function to see how it works. First, just search for the word 'American':
+
+```{r}
+
+```
+
+Then, let's search for the word 'American' with ANY character before it:
+
+```{r}
+
+```
+
+Now, we don't see the headline that starts with 'American', because there's no character before it.
+
+You can use as many dots as you want:
+
+```{r}
+
+```
+
+Since the `.` is important for regex, if you want to look for an actual ".", you have to use "escape characters", which are just two backwards slashes:
+
+```{r}
+
+```
+
+The `|` symbol is also useful - it means "or" and so will look for multiple things at once:
+
+```{r}
+
+```
+
+You can look for sets of letters with `[]`:
+
+```{r}
+
+```
+
+Or anything BUT that set of letters with `^`.
+
+```{r}
+
+```
+
+You can also look for any number (or any letter, either uppercase or lowercase) using `-`:
+
+```{r}
+
+```
+
+There are approximately one million more ways of using regular expressions - if you're interested in becoming an expert, [this page](https://r4ds.hadley.nz/regexps.html) has a good overview.
+
+## tidytext
+
+Okay, so we've learned how to do some pretty simple things with text. But what if we want to actually understand the meaning of text? Or in some sense what it's about, beyond just the presence of a word? To do so, we're going to rely on a package called `tidytext`. Let's first load it in:
+
+```{r}
+
+```
+
+One quirk of tidytext is we need to change the format of our data. To do so, we use the `unnest_tokens()` function, which converts our text into individual words. "Tokenizing", in natural language processing, simply means to separate our text data into individual components.
+
+```{r}
+
+```
+
+Our dataframe now has a lot more rows, because rather than each row being an article, it's a word - in this case, each word in the article description.
+
+### Word frequency
+
+Now that we have words separated out, we can do some cool things, like ask what the most common words are in our entire dataset:
+
+```{r}
+
+```
+
+Well that's boring.
+
+One thing that might be useful to make sense of the data is to get rid of what are called "stop words" in natural language processing. These are boring words that provide structure to a sentence but don't - on an individual level - convey meaning. Words like the, it, is, etc.
+
+Let's first load in our list of stop words:
+
+```{r}
+
+```
+
+`stop_words` actually has multiple lists of stop words, so we're going to edit this object to only include words from one kind of list.
+
+```{r}
+
+```
+
+Then, we're going to use a function called `anti_join()` to get rid of all the rows of our `news_tidy` object that have a word in the `word` column that are also in the `stop_words` object.
+
+```{r}
+
+```
+
+Now that we've gotten rid of stop words, let's recalculate the word frequencies:
+
+```{r}
+
+```
+
+Getting better! There's still some boring nonsense in there, and in actual data analysis, we'd probably want to do even more to clean up the data ahead of time (like removing that "s", which appears because when we tokenize data, it separates out things by spaces and by apostrophes.)
+
+### Sentiment analysis
+
+One of the simplest things we can do when analyzing the meaning of text is what's called sentiment analysis, where we score the text on how positive or negative it is. This works by using what's called a "dictionary", that contains a bunch of words that are labeled as either positive or negative, and then asks how often words with either label appear in a text.
+
+`tidytext` comes with a few different sentiment analysis dictionaries. We'll use one called "afinn" for this tutorial:
+
+```{r}
+
+```
+
+Then, we will use the `inner_join()` function to join this list with our `news_tidy` object to only save rows with words that are in the `sentiments` object.
+
+```{r}
+
+```
+
+Now we have numerical values for all relevant words in our data! There are a few different things we can do.
+
+First, we can come up with a sentiment score for each article, which won't be particularly accurate since the `short_description` column is so short and so we don't have a lot of data for each one:
+
+```{r}
+
+```
+
+We can also ask overall, what the sentiment is for these articles, across all articles:
+
+```{r}
+
+```
+
+Or we can do it by year:
+
+```{r}
+
+```
+
+Or by news category:
+
+```{r}
+
+```
+
+If there's time, let's practice using different sentiment analysis dictionaries below:
+
+```{r}
+
+```

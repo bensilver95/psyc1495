@@ -1,0 +1,105 @@
+---
+title: "Lab assignment DUE 10/8"
+output: html_document
+---
+
+Another week, another homework. How thrilling!! In today's homework, you're going to practice doing text analysis.
+
+#### Question 1
+
+Let's first load in `tidyverse` and `tidytext`.
+
+```{r}
+
+```
+
+#### Question 2
+
+Now, let's bring in the CSV file called `nsf.csv`. This file has information about NSF (National Science Foundation) grants that have been terminated by the current presidential administration.
+
+```{r}
+
+```
+
+#### Question 3
+
+Save a new dataframe that only has grants that were awarded to Columbia. (Hint: There are some grants where the recipient is "Teachers College, Columbia University" - how do you save those as well as ones awarded to "Columbia University"?)
+
+```{r}
+
+```
+
+#### Question 4
+
+Now go back to your full list. For some reason, `org_city` is in all caps. Overwrite that column (Hint: Don't create an entirely new column, but you'll use the same function that you would use to do that) so that the cities are in "title case."
+
+```{r}
+
+```
+
+#### Question 5
+
+It looks like there's inconsistency in the `directorate` column about whether or not quotation marks are included. Use the function `str_remove_all()` to remove any `"` from the text.
+
+This one's a bit tricky, so I'll give you some hints:
+
+-   We didn't use `str_remove_all()` in class, but it works like many other functions from `stringr` - provide the column as the first argument, and the string to remove as the second argument
+
+-   Remember how we had to use `\\.` to specify a period when doing regular expressions? Keep that in mind when thinking about how to specify `"`.
+
+```{r}
+
+```
+
+#### Question 6
+
+To make things simpler, let's make everything in the `project_title` and `abstract` columns lowercase:
+
+```{r}
+
+```
+
+#### Question 7
+
+Make a new column that shows how many words each abstract is. Then, display the average word count across all abstracts.
+
+```{r}
+
+```
+
+#### Question 8
+
+Create a new column that indicates whether or not an abstract contains the word "bias" OR some version of the word "stereotype" (including variations like "stereotyping") OR some version of the word "culture" (including variations like cultural). (Hint: You'll use the `|` command within `str_detect()`)
+
+```{r}
+
+
+```
+
+How many project abstracts contain one of these words?
+
+#### Question 9
+
+Okay, now it's time to use some `tidytext` functions. Make it so that each row is a word from the `project_title` column. Save this into a new dataframe.
+
+```{r}
+
+```
+
+#### Question 10
+
+Let's load in stop words and remove the ones from the 'SMART' lexicon from our new dataframe. (Hint: In class, we removed words from the 'snowball' lexicon.)
+
+```{r}
+
+```
+
+#### Question 11
+
+What are the most common words across all terminated grant titles?
+
+```{r}
+
+```
+
+There will be a lot of words that would make sense to be common - things like science, project, research, etc. Keep going through the list - what are some words that you see that might have caused the government to terminate the grant? Keep in mind that the government has cited diversity, equity, and inclusion (DEI) as a reason to terminate grants.
