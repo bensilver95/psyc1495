@@ -1,0 +1,114 @@
+---
+title: "Lab Assignment DUE 11/5"
+output: html_document
+---
+
+For today's homework, you'll be working with a dataset from [Freedom House](https://freedomhouse.org/), which releases an annual "Freedom Index" which rates each country on how "free" they are, based on things like election transparency, media independence, and civil rights. The dataset was published as part of Tidy Tuesday.
+
+### Question 0
+
+This task has lost its status as a real question because of how confident I am in your ability to do it. Load `tidyverse`, read in `freedom.csv`.
+
+```{r}
+
+```
+
+Take a look at the data. You can learn more about each variable [here](https://github.com/rfordatascience/tidytuesday/tree/main/data/2022/2022-02-22).
+
+### Question 1
+
+For now, let's just work with data from the most recent year in the dataset, 2020. Make a new dataframe that only includes data from 2020.
+
+```{r}
+
+```
+
+### Question 2
+
+Make a violin plot that shows the spread of one of the two freedom measures (CL or PR - look up what those mean and how they're calculated!), according to the `Status` variable, which has three values: NF (Not Free), PF (Partially Free), and F (Free).
+
+```{r}
+
+```
+
+### Question 3
+
+Make your graph a bit nicer. Change the colors and the background to your liking. Clarify what the Y axis refers to by changing the Y axis title, and add a descriptive title.
+
+BONUS: Change the X axis labels to be more descriptive.
+
+```{r}
+
+```
+
+### Question 4
+
+Now, make a histogram of the OTHER freedom measure. Use `facet_wrap()` to create separate histograms for each `Region_Name`.
+
+```{r}
+
+```
+
+### Question 5
+
+Make a boxplot that shows the spread of the SUM of the two freedom measures, according to either Status or Region_Name (your choice). (Hint: You'll want to use `mutate()` to create a new variable that sums them up, then use that new variable in ggplot.) (Double hint: We didn't make a boxplot in class, but it's pretty simple to do so, and similar to what we did for `geom_violin()`. Look up the list of geom functions for one that might help you make a boxplot.)
+
+```{r}
+
+```
+
+### Question 6
+
+Change the Y axis limits to include all possible values, and increase the number of Y axis labels.
+
+```{r}
+
+```
+
+### Question 7
+
+Make a bar graph showing the counts of each Status. Change the background and pick a nice color to fill the bars with AND to outline them with.
+
+```{r}
+
+```
+
+### Question 8
+
+Is there a relationship between Civil Liberties and Political Rights? Plot a scatter plot with a line of best fit to see if that's true.
+
+```{r}
+
+```
+
+### Question 9
+
+Make it so that your graph has different best fit lines for each Region. Change the transparency of the dots as you see fit to make it clearer.
+
+```{r}
+
+```
+
+### Question 10
+
+Go back to your original data frame with all of your data. Select three countries and create a new dataframe with all of the years for just those countries. (Hint: To filter in this way, you can do something like `country %in% c('list','of','countries')`
+
+```{r}
+
+```
+
+### Question 11
+
+Make a line graph (Hint: This is a new kind of graph - find the correct geom for it) with Year on the X axis and one of the freedom measures on the Y axis.
+
+```{r}
+
+```
+
+### Question 12
+
+Beautify your graph: Set the Y axis limits to show the full range, give it a title, and increase the font sizes. Then, save your figure to a jpeg file.
+
+```{r}
+
+```

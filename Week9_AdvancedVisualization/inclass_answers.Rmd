@@ -1,0 +1,294 @@
+---
+title: "In class tutorial 11/12"
+output: html_document
+---
+
+Welcome to your final in-class coding tutorial - boohoo or hooray, depending on how much you've enjoyed these tutorials.
+
+In today's tutorial, we're going to learn a few more visualization features to make our graphs more informative and more beautiful. These features include:
+
+-   **Error bars:** This is the most important thing we'll learn today, as error bars are the primary way we can convey uncertainty in our graphs.
+
+-   **Labeling and annotating:** `ggplot` has some built in ways that we can add labels to our graphs to make them easier to understand
+
+-   **Color palettes:** Not only can we change individual colors, but we can change color themes as well. This feature is purely aesthetic.
+
+To illustrate (ha) these features, we'll use a dataset from the Board of Elections on the recent Mayoral election. That data can be found [here](https://enr.boenyc.gov/CD27286ADI0.html). I've gone ahead and cleaned it up for you (YOU'RE WELCOME) in the csv file called `2025_mayor.csv`.
+
+Load `tidyverse`, read the file:
+
+```{r}
+library(tidyverse)
+mayor <- read_csv('2025_mayor.csv')
+```
+
+The data is broken down by Assembly District and Borough. Some ADs are listed twice because they span multiple Boroughs. However, the voting numbers correspond to the number of people in that AD in that borough, so voters aren't counted twice.
+
+Some candidates are listed twice because they ran on multiple ballot lines.
+
+## Prepping the data
+
+Let's say we want to compare Zohran Mamdani's vote share to Andrew Cuomo's. Before we get to the new stuff today, we have to prep our data to make this comparison possible.
+
+### Converting numbers to percentages
+
+First things first. Number of votes is less informative than percentage of votes. Let's make some new columns that help us get **percentages**, which we'll use for the rest of the tutorial.
+
+First, let's use a function called `rowSums()`, along with the `select()` function, to calculate the total number of votes in each AD.
+
+```{r}
+mayor <- mayor %>% 
+  mutate(Total = rowSums(select(.,-c(AssemblyDistrict,Borough)),
+                         na.rm = T))
+```
+
+Then, let's create a new column that represents the percent of the total vote for each candidate. To make things cleaner, let's first also create a column that represents the total votes Mamdani got, across his two ballot lines.
+
+When a column name has spaces and parentheses and other symbols that we use when coding, we pass the column name in between the `` ` `` symbol. (This is why it's best practice to make your column names simple and free of spaces, and why you might want to rename columns in found datasets that aren't optimized for coding.)
+
+```{r}
+mayor <- mayor %>% 
+  mutate(Mamdani_total = `Zohran Kwame Mamdani (Democratic)` + 
+           `Zohran Kwame Mamdani (Working Families)`,
+    Mamdani_pct = Mamdani_total/Total * 100,
+    Cuomo_pct = `Andrew M. Cuomo (Fight and Deliver)`/Total * 100)
+```
+
+### Pivoting to long format
+
+Okay, so let's say we want to make a bar graph that compares the percentage of votes Zohran Mamdani got to the percentage of votes Andrew Cuomo got. Our X axis is candidate, and our Y axis is percentage of votes. But we don't have columns that correspond to those variables. What can we do to get them?
+
+...
+
+If you said "Pivot our data into long format using the `pivot_longer()` function," you're exactly correct!
+
+For simplicity, let's first select just the columns we want: AD, Borough, and the columns for Zohran Mamdani and Andrew Cuomo.
+
+```{r}
+mayor_select <- mayor %>% 
+  select(AssemblyDistrict,Borough,Mamdani_pct, Cuomo_pct)
+```
+
+Now, we can pivot!
+
+```{r}
+mayor_select_long <- mayor_select %>% 
+  pivot_longer(cols = c(Mamdani_pct,Cuomo_pct),
+               names_to = 'Candidate',
+               values_to = 'Vote_pct')
+```
+
+And now, we can make our bar graph, where X is **candidate**, and Y is **vote percentage**.
+
+```{r}
+ggplot(mayor_select_long,
+       aes(x = Candidate, y = Vote_pct)) +
+  geom_bar(stat = "summary", fun = "mean")
+```
+
+This graph shows that, on average, Mamdani got about 50% of the votes in each Assembly District, while Cuomo got about 41%.
+
+## Error bars
+
+*However, can we draw any statistical conclusions from this graph?* Not really...we don't know if the differences between the bars are **statistically significant** or not.
+
+Of course, we can easily run a statistical test to answer this question. Let's run a **linear regression**. First, we'll **effect code** our Candidate variable.
+
+```{r}
+mayor_select_long <- mayor_select_long %>% 
+  mutate(Candidate.e = if_else(Candidate == 'Mamdani_pct',1,0))
+```
+
+Now, we'll run our model.
+
+```{r}
+summary(lm(Vote_pct ~ Candidate.e, data = mayor_select_long))
+
+```
+
+Anyone want to take a stab at interpreting this output?
+
+...
+
+It says that Mamdani, on average, across Assembly Districts, got about 9 percentage points more of the vote than Cuomo did, and that this effect is significant (p = 0.0008).
+
+In order to have our graph convey this significance, we'll want to add error bars, which show the degree of uncertainty in our model. More uncertainty means wider distributions, which means differences between groups are less likely to be real or meaningful.
+
+There are a couple of different ways to add error bars, both of which involve the `geom_errorbar()` function in `ggplot`.
+
+### Automatic summary calculation
+
+First, we can have `geom_errorbar()` calculate the error bars for us automatically, using `stat = "summary"`.
+
+```{r}
+ggplot(mayor_select_long,
+       aes(x = Candidate, y = Vote_pct)) +
+  geom_bar(stat = "summary", fun = "mean", fill = 'palegreen3') +
+  geom_errorbar(stat = "summary",
+                fun.data = mean_se,
+                width = .2)
+```
+
+We also use the `width =` argument to make the error bars more reasonably sized. You might also want to change the fill color of the main bars so the error bars pop out more.
+
+These bars show us the standard error of our data, which is a measure of how spread out our data is (its **variability**). The lower part of the error bar is the mean minus one SE, while the upper part is the mean + one SE. If the range in one group overlaps with the range in the other, it's not likely that the difference between them will be significant.
+
+### Manual SE calculations
+
+Another way to plot error bars is more manual, which might be necessary sometimes if our data are more complex.
+
+To do this, we create a summary dataframe, that just contains the mean and SE for each group.
+
+```{r}
+mayor_select_summary <- mayor_select_long %>% 
+  group_by(Candidate) %>% 
+  summarize(Mean_pct = mean(Vote_pct),
+            SE_pct = sd(Vote_pct)/sqrt(n()))
+```
+
+Now, we create a graph with this new dataframe, and manually pass the SE values to `geom_errorbar()`, inside of `aes()`. Note here that we use `geom_col()` instead of `geom_bar()`. We use `geom_col()` when our dataframe IS the mean - in `geom_bar()`, we had our full dataset and we had to tell it to calculate the mean by passing `stat = "summary",fun = '"mean"`.
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct)) +
+  geom_col(fill = 'palegreen3') +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2)
+```
+
+Hooray! You can use error bars on point graphs as well:
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2)
+```
+
+## Labeling and annotating
+
+So far when graphing, everything we've added to our graphs is DATA. But we can add **non-data annotations** to our graphs to make them easier to understand.
+
+### Adding lines
+
+It can sometimes be useful to add a horizontal or vertical line to our graph to indicate an important threshold or value. For example, in this election, there was a lot of speculation about whether or not Mamdani would get over 50% of the vote, given that it was essentially a three-way race (Curtis Sliwa ran on the Republican line).
+
+We can use the `geom_hline()` function to indicate that 50% value. Let's also adjust our y axis range to include the full range of our data, which we can see by looking at the dataframe runs from 10% to 84%.
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2) +
+  geom_hline(yintercept = 50) +
+  lims(y = c(10,84))
+```
+
+I like to make these threshold lines dashed. Maybe we also want to make it a different color?
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2) +
+  geom_hline(yintercept = 50, linetype = 'dashed',color = 'tomato') +
+  lims(y = c(10,84))
+```
+
+One other thing to note: The order in which you list these plots is the order in which `ggplot` plots them. So since we used `geom_hline()` after `geom_point()`, the threshold line is plotted *on top of the points*. If we want it to be behind the points, we simply need to pass it first.
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct)) +
+    geom_hline(yintercept = 50, linetype = 'dashed',color = 'tomato') +
+  geom_point() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2) +
+  lims(y = c(10,84))
+```
+
+### Adding annotations and labels
+
+Sometimes, we might want to add text to our graph. We can do this using the `geom_text()` function.
+
+We might wish for this text to be labels, which we can pass to `geom_text()` within the `aes()` function. We'll also use the `vjust =` argument so that the label doesn't appear right on top of the data.
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct)) +
+    geom_hline(yintercept = 50, linetype = 'dashed',color = 'tomato') +
+  geom_point() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2) +
+  lims(y = c(10,84)) +
+  geom_text(aes(label = Mean_pct), vjust = 2.5)
+```
+
+If we want to round the number, we can do so directly within the `ggplot` call, with the `round()` function.
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct)) +
+    geom_hline(yintercept = 50, linetype = 'dashed',color = 'tomato') +
+  geom_point() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2) +
+  lims(y = c(10,84)) +
+  geom_text(aes(label = round(Mean_pct,2)), vjust = 2.5)
+```
+
+We can also add our own messages to the graph at specific coordinates that we specify within `geom_text()`.
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct)) +
+    geom_hline(yintercept = 50, linetype = 'dashed',color = 'tomato') +
+  geom_point() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2) +
+  lims(y = c(10,84)) +
+  geom_text(aes(label = round(Mean_pct,2)), vjust = 2.5) +
+  geom_text(x = 2, y = 60, label = 'Mamdani surpassed 50%')
+```
+
+## Color palettes
+
+Let's go back to our bar graph, and let's color the bars according to Candidate.
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct,
+           fill = Candidate)) +
+  geom_col() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2)
+```
+
+The colors that are automatically assigned are just one of many themes, or **palettes**, in `ggplot`. You can see a lit of R color palettes [here](https://r-graph-gallery.com/38-rcolorbrewers-palettes.html).
+
+To change the palette, you can use the `scale_fill_brewer()` (or `scale_color_brewer()`) function.
+
+```{r}
+ggplot(mayor_select_summary,
+       aes(x = Candidate, y = Mean_pct,
+           fill = Candidate)) +
+  geom_col() +
+  geom_errorbar(aes(ymin = Mean_pct - SE_pct,
+                ymax = Mean_pct + SE_pct),
+                width = .2) +
+  scale_fill_brewer(palette = 'Set2')
+```
+
+There are also packages you can install, like `paletteer` or `wesanderson`, that give you even more color palette options.

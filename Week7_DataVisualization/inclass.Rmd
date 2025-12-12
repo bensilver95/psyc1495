@@ -1,0 +1,360 @@
+---
+title: "In-class tutorial: Data visualization"
+output: html_document
+---
+
+The time has finally come......the moment you've all been waiting for.....**DATA VISUALIZATION!!!**
+
+## Getting started
+
+To make these visualizations, we're going to use a package called `ggplot`, which I've alluded to in the past and we've dipped our toes into when making maps.
+
+To jog your memory: `ggplot` is a package in R that allows for highly customizable and pretty plots. Here, we're going to learn a few basics of making plots using ggplot that will hopefully get you well on your way to making informative and beautiful data visualizations.
+
+### Loading and reading
+
+You can do it in your sleep at this point: We first need to load `tidyverse`, which includes the `ggplot` package.
+
+```{r}
+
+```
+
+Are you still sleeping? That's fine, you can read in files in your sleep as well, I bet. Read in `BFY_Age4.csv` using `read_csv()` (NOT `read.csv()`!)
+
+```{r}
+
+```
+
+**What is this dataset?**
+
+In class on Monday, Professor Downey mentioned a recent study conducted by Dr. Kim Noble at Teacher's College. The study investigated the effects of Universal Basic Income on a child's well-being by randomly assigning parents to one of two groups: Receive \$333/month (experimental group) or receive \$20/month (control group).
+
+Just this past year, a study was published reporting the results of the experiment after 4 years. You can read the study [here](https://jamanetwork.com/journals/jamapediatrics/fullarticle/2834896), if you're interested.
+
+The authors made the data from their study publicly available, which you can find [here](https://www.icpsr.umich.edu/web/DSDR/studies/37871/summary). The raw data contains over 8,000 variables. I've selected a small subset (14 variables) for us to play around with today. *(You are more than welcome to use publicly available data from a previous study for your final project, as long as it has some connection to policy and contains enough data that you can do something different from what the original authors did.)*
+
+One other note: Typically in this class, I've given you datasets where I've edited the variable names so it's obvious what they describe. But often, in big secondary datasets, the variable names are not very clear, and the data will come with something called a **"codebook"** for you to look up information about them and what the data means. I've included the codebook for this data as a file in this project, and I expect you to use it to better understand the variables.
+
+Take some time to look at the data and the codebook now.
+
+### Cleaning
+
+Ugh, we're so close to plotting. But before we do, we want to clean up our data a bit and make sure we're setting ourselves up for success.
+
+The first thing you might notice is that in your data there are a bunch of "-888"s scattered about. If we look at the codebook, we'll see that that means the participant responded "I don't know." That's useless, let's just get rid of those numbers and turn them into blanks. To do so, we'll use a function called `na_if()`, which does the reverse of `replace_na()`, in tandem with `mutate()`.
+
+```{r}
+
+```
+
+There actually is an easier way to do this, where you can just tell R to look for -888 across all columns and use `na_if()` everywhere, but we'll stick with this method for now because it's conceptually simpler, if not more annoying.
+
+The next thing you might notice is that there are some columns where the values are numbers, but they might work better as letters. For example, the `SITE` variable actually corresponds to the 4 different states where data was collected. Similarly, the 1s and 0s in `TREATMENT` correspond to experimental group, and the 1s and 5s correspond to Yes and No in `CCHRONHEALTHA4`. Our graphs will look nicer and be clearer if these things are actually labeled. Let's use a function called `recode()` to re-label these columns.
+
+```{r}
+
+```
+
+There are some other columns that might benefit from being recoded, but we won't worry about those for now.
+
+## Plotting: Visualizing distributions
+
+`ggplot` works in a very particular way. You first tell it what the relevant variables are (inside the `aes()` function, which we've encountered before), then you tell it what kind of graph you want to create (usually with a function called something like `geom_[thing]()`), and then you add additional "layers" to customize the plot.
+
+So, for example, what do you notice about running the following?
+
+```{r}
+
+```
+
+Here we have a blank graph, with height on the X axis. But ggplot doesn't know what we actually want to *do* with our data. That requires us to pass a `geom_[thing]()` function. We're going to make a few different kinds of plots today, but you can see all the different options under the "geom" section of [this page](https://ggplot2.tidyverse.org/reference/index.html).
+
+### Histograms
+
+Let's start with the basics:
+
+```{r}
+
+```
+
+Lovely! You've made your first ggplot histogram.
+
+Each geom comes with its own set of arguments you can use to customize the plot. For example, you can change the color of the outlines and the fill color:
+
+```{r}
+
+```
+
+You can also change the number of bins, which defaults to 30.
+
+```{r}
+
+```
+
+What's great about `ggplot` is that, since the basic syntax is the same across graphs, you can easily plot completely different variables using only the same code. Let's make a histogram of th `CCBCLINDEXA4` variable. The CBCL is a standard measure of child mental health - higher scores mean more reported emotional problems.
+
+```{r}
+
+```
+
+What the!!! This is a great example of how plotting can help you better understand your data. For some reason our graph is going all the way down to -800. If we check out our data, we can see there is one value of -777. This likely signifies some error in the data, so we should use `na_if()` to turn it into NA.
+
+```{r}
+
+```
+
+Now let's try and plot again:
+
+```{r}
+
+```
+
+Hooray.
+
+### Violin plots
+
+Another great way to visualize a distribution is with something called a violin plot. We have to provide an X variable in order for it to work (you'll see why in a moment). For now, let's just say `x = 1`.
+
+```{r}
+
+```
+
+It's called a violin plot because it sortttt of looks like a violin. It's just another way of demonstrating the spread of data - wider areas signify more data in that range, while narrower areas signify less. Where do most of the CBCL scores fall?
+
+Something like a violin plot is actually very useful for comparing distributions. To do so, we can bring in a real X variable.
+
+```{r}
+
+```
+
+Now, `ggplot` is showing us the `geom_violin()` distribution for each value of the `TREATMENT` variable. That's a pretty complex graph for just a little bit of code - hooray for the power of `ggplot`!
+
+Again, there are arguments you can provide to improve the figure, like color/fill...
+
+```{r}
+
+```
+
+You can also add quantile lines:
+
+```{r}
+
+```
+
+### Dot plots
+
+Dot plots can also be a good way to visualize the spread of your data, but it's not quite as simple as it first seems. Try using `geom_point()` to plot household poverty level for each site. Remember, the syntax is the same, you're just using different variables and functions.
+
+```{r}
+
+```
+
+I'm loling at how dumb this looks. Our X axis shows us each site, and our Y axis shows us the poverty category (see the codebook for the different categories). But since there's only one point on the graph for each point - all the 1s in the LA group go in the same place, for example - we can't actually tell how many people are in each category!
+
+To do so, we're going to use a different geom, called `geom_jitter()`. This function "jitters" or slightly scrambles the exact value for each datapoint. We wouldn't want to do this when calculating stats, but for graphing, it's very helpful, because it can help us see data density.
+
+```{r}
+
+```
+
+Better! We can pass some arguments to `geom_jitter()` to make it even clearer, such as `width =`, which controls how spread out the points are on the x axis, and `alpha =` which controls how opaque the points are.
+
+```{r}
+
+```
+
+Now you can really begin to get a sense of where your data is most densely located.
+
+One other thing: thus far, we've been changing colors for the entire plot, within the geom function. But you can also tell R that colors should be automatically set according to a variable, by passing it to `aes()`.
+
+So, if we wanted to make each site a different color, we could do this:
+
+```{r}
+
+```
+
+When you do this, R automatically sets the colors. There is a way of changing what they are, which is a bit more complicated. I can show you, if you're interested.
+
+You can set the colors according to any variable you want. Changing colors by site isn't actually good graphing practice, because it doesn't convey any new information. What if we change color according to a variable that isn't already plotted?
+
+```{r}
+
+```
+
+Now, we can see if there are any overall differences in poverty by treatment group, by site.
+
+### Counts with a bar graph
+
+You can also use the `geom_bar()` function to display counts of different categories. For example:
+
+```{r}
+
+```
+
+This is a nice way of seeing how many people are in each group. You can break it up further by using the fill argument within `aes()`.
+
+```{r}
+
+```
+
+And you can put the plots side by side by using an argument called `position = 'dodge'`.
+
+```{r}
+
+```
+
+## Plotting: Visualizing relationships
+
+Plots are of course also very useful for visualizing relationships between different groups. Let's begin with the very overrated BAR PLOT.
+
+### Bar plots
+
+We used a bar plot just before this to calculate counts. But we can also use it to plot mean values by adding some additional arguments.
+
+Let's plot overall child health (`CHEALTHA4`) according to treatment group.
+
+```{r}
+
+```
+
+We can again plot this according to different values of some other variable. Again, this is a little more complicated than before. We need to specify the grouping variable within `aes()`, in addition to the fill variable.
+
+```{r}
+
+```
+
+One weird thing that's going on here, that you may encounter, is that R is assuming `HHPOVERTYCATA4` is a continuous variable, when in fact it is a categorical variable. We can fix that directly within our ggplot call. (You can also do so beforehand, if you want your ggplot call to be cleaner.)
+
+```{r}
+
+```
+
+Best practice would be to put error bars on your bars so we can tell if differences between them are meaningful - these error bars give us a sense of the spread of the data. We'll likely come back to how to do that in our advanced plotting session in a few weeks.
+
+### Scatter plots
+
+In terms of visualizing relationships between two continuous variables, there's nothing better than a scatter plot. Let's say we wanted to plot child height vs weight. We use the same syntax we've been using, but just change the variables and the geom. `geom_jitter()`
+
+```{r}
+
+```
+
+That child who is 180cm is likely an error - I have never met a 4 year old who is 5'9", and I'm honestly getting scared just thinking about it. Let's fix that and re–plot. (Or, like we did before, you could fix it directly within the plot)
+
+```{r}
+
+```
+
+Love it. We can also add a line of best fit using the `geom_smooth()` function. This is the first time that we've added two geoms together, which is totally allowed in `ggplot`. Basically, you can add as many plots as you want on top of each other. Sometimes it will work, sometimes it won't.
+
+```{r}
+
+```
+
+What does this line represent? It is the relationship between height and weight, of course. But it's also a visualization of the output of a linear model, where height is the predictor variable and weight is the outcome. Let's run `lm()` on our data to demonstrate:
+
+```{r}
+
+```
+
+The effect size here is 1.016. This means that for every centimeter of height that is added to a child, on average, their weight will go up by one pound. And you can see that relationship visualized in our graph.
+
+As always, you can separate out data according to group. Let's say we wanted to look at whether the height-weight relationship was stronger for children with a chronic health condition.
+
+```{r}
+
+```
+
+A few things going on here. First, there are some NAs, and ggplot is treating those as a separate group. We'll want to get rid of those. Second, we'll want to use the alpha argument to make the dots less opaque and make everything clearer.
+
+```{r}
+
+```
+
+That looks a little better. You'll notice there are way more "No" dots than "Yes" dots - makes sense, as there are more children without a chronic illness than with one. You'll also notice that the gray ribbon around the line of best fit is wider for the "Yes" dots. This gray ribbon represents uncertainty in our model estimate. Our goal in statistics is to minimize uncertainty, which we often do when we have more data. Thus, our group with more data has less uncertainty and a narrower ribbon. We'd have to run a statistical test (an interaction!) to determine if the difference in the slopes of these lines is real/meaningful.
+
+## Aesthetics
+
+So you've learned `ggplot` basics. Doesn't it feel incredible? Along the way, we've done some small things to make our graphs look better, but there is a lot more we can do. A lot of this will be best explored on your own, but I'll give you a taste of what's out there.
+
+### Facetting
+
+Instead of plotting different groups according to different lines/colors in the same graph, `ggplot` also allows you to make separate plots side by side using "facetting". To do so, we can use either the `facet_wrap()` or `facet_grid()` functions.
+
+Let's first return to our height x weight graph, at its simplest.
+
+```{r}
+
+```
+
+Let's use `facet_wrap()` to break out different graphs according to `TREATMENT`.
+
+```{r}
+
+```
+
+You can do two variables at once using `facet_grid()`.
+
+```{r}
+
+```
+
+### Labels
+
+You can set labels using the `labs()` layer.
+
+```{r}
+
+```
+
+You can change simple things about the way the labels show up using the `theme()` layer. It gets a bit complicated here and there are pretty much endless options for changing things. I'm just going to show you how to change the size and positioning.
+
+```{r}
+
+```
+
+Now that's starting to look like a real nice graph!
+
+### Axes
+
+You can also change things about the way the axes are displayed, such as the breaks, labels, and the limits. To do so, you use a type of function called `scale_[x/y]_[data type]`. For example, here we will use `scale_x_continuous()`. Let's change the number of breaks.
+
+```{r}
+
+```
+
+We can also change the labels:
+
+```{r}
+
+```
+
+Or the limits! (The limits are automatically set according to the range of your data).
+
+```{r}
+
+```
+
+### Background
+
+Lastly, you can change the background of the figure according to different `theme_[thing]` functions. Play around with changing the below to one of the following: `theme_classic()`, `theme_bw()`, `theme_minimal()`, `theme_void()`.
+
+```{r}
+
+```
+
+## Saving your work
+
+Okay, so you've made a beautiful figure. Let's save it! You can do so using the `ggsave()` function, where the one argument is the name of the file, like so:
+
+```{r}
+
+```
+
+You can also pass the width and height arguments to change the size of the figure:
+
+```{r}
+
+```
+
+Combine everything we've done today and save a beautiful figure below! We'll talk about best practices for figure visualization in a few weeks.

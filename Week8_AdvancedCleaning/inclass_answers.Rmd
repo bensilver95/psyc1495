@@ -1,0 +1,226 @@
+---
+title: 'In class tutorial: Data cleaning (with answers)'
+output: html_document
+---
+
+Welcome to your penultimate (second to last) coding tutorial. At this point, you have learned all of the major steps you need to analyze a dataset:
+
+-   You know how to read in data, inspect it, and make sense of it
+
+-   You know how to access and work with different types of data, such as text data and geospatial data
+
+-   You know how to clean data to prepare it for analysis
+
+-   You know how to summarize your data and run statistical tests to detect relationships between variables
+
+-   You know how to make plots in order to visualize those summaries and those relationships
+
+Today's tutorial will be briefer than the last few. We'll learn two new topics, and briefly review how to read main effects and interactions from a linear regression.
+
+## Long vs wide data
+
+For the first part of today's tutorial, we're going to revisit the dataset from two weeks ago on educational enrollment at NYC public colleges and universities.
+
+Load tidyverse, and read in the file.
+
+```{r}
+library(tidyverse)
+suny <- read_csv('SUNY_enrollment.csv')
+```
+
+### Understanding long and wide formats
+
+When considering the relationship between variables in R, there are two primary ways your data can be structured:
+
+-   One column contains the values for one group, while another column contains the values for the other group. To compare the two groups, you compare the columns. This is called **"wide"** format.
+
+-   One column contains all of the values for both groups, while another column contains a label that indicates which group the data belongs to. To compare the two groups, you use formula notation to ask how X affects Y. This is called **"long"** format.
+
+Sometimes, we'll want our data in wide format, while other times, we'll want it in long format. Linear regressions and ggplot typically expect our data to be in long format. More importantly, however, we can't control what format our data is in when we find it from an external source. This is why it's important to know how to **pivot** between wide and long format.
+
+Take a look at your `suny` dataframe.
+
+Imagine you wanted to run a linear regression that compares whether there are more part-time or full-time students at community colleges. Conceptually, what is X? What is Y?
+
+...
+
+X is student type: full time vs part time. Y is number of students. In order to run a linear regression with `lm()`, we need corresponding X and Y columns. Do we have those?
+
+...
+
+No! We do not. This is because this part of our data is in *wide* format. In order to be able to run a regression, or make a plot with `ggplot`, we need our data to be **long**.
+
+Before we do that, though, to simplify things, let's first get rid of the columns about graduate enrollment, because we're not interested in it for now. To do so, we're going to use the `select()` function, which allows us to select specific columns. Within select, you can also use `-` to get rid of columns, which is helpful if you want to select most of them.
+
+```{r}
+suny_undergrad <- suny %>% 
+  select(-c(Graduate_FullTime,Graduate_PartTime))
+```
+
+Now, our data no longer has the columns we just "negative selected."
+
+### Pivoting wide to long
+
+Okay, back to making our data long. This is where pivoting comes in. We're going to use a function called `pivot_longer()` to change the format of our data.
+
+The difference between wide and long might be abstract and difficult to understand, but once we restructure it, I think it will become clearer.
+
+The `pivot_longer()` function requires several arguments:
+
+-   `cols`: The columns that we're pivoting. These are the columns that are currently in wide format
+
+-   `names_to`: This is the new name of the column that contains the old column names.
+
+-   `values_to`: This is the name of the column that contains all of the data from the old wide columns.
+
+Let's give it a shot.
+
+```{r}
+suny_undergrad_long <- suny_undergrad %>% 
+  pivot_longer(cols = c(Undergraduate_FullTime,Undergraduate_PartTime),
+               names_to = 'Student_type',
+               values_to = 'Enrollment')
+```
+
+Take a look at the new dataframe. Now, there is a very clear X and Y variable. It also means that there is no longer one row for each school/year. Now, each school/year combination has two rows: one for each value of `Student_type`.
+
+Having your data structured this way makes it easy to graph with `ggplot`. Let's make a bar plot below, for just community colleges.
+
+```{r}
+ggplot(suny_undergrad_long %>% 
+         filter(Institution_Type == 'Community Colleges'),
+       aes(x = Student_type, y = Enrollment)) +
+  geom_bar(stat = 'summary', fun = 'mean')
+
+```
+
+Earlier, we limited our dataframe to just be the undergrad columns. But we didn't have to - we can pivot as many columns as we want. When you want to pivot a lot of columns at once, it might be easier to use a selecting function, like `contains()`.
+
+```{r}
+suny_longer <- suny %>% 
+  pivot_longer(cols = contains('Time'),
+               names_to = 'Student_type',
+               values_to = 'Enrollment')
+```
+
+### Pivoting long to wide
+
+Less frequently, you'll need to pivot to wide format. But it's still useful to know how to do it.
+
+To demonstrate, let's review using the `ngramr` package, which scrapes data from Google Ngram.
+
+```{r}
+library(ngramr)
+```
+
+Let's say we want to investigate which is a more popular phrase in Google's historical database of written work: "college application" vs "job application".
+
+```{r}
+applications <- ngram(
+  c('college application','job application'),
+  year_start = 1922, 
+  year_end = 2022)
+
+applications <- applications %>% 
+  mutate(Frequency = Frequency * 1000000000)
+```
+
+This data is in long format. Click on the dataframe to organize by year - you'll see that just like before, there are two rows for each year, and then sets of "college application" and "job application". We can pivot our data to wide format so that there are separate columns for each search term, using the `pivot_wider()` function.
+
+-   `id_cols`: The column that indicates the fundamental unit/identity of the data. Essentially, this is the column whose values repeat.
+
+-   `names_from`: The column that has labels that will become column names.
+
+-   `values_from`: The column that has the values to be sorted into the new columns
+
+```{r}
+applications_wider <- applications %>% 
+  pivot_wider(id_cols = Year,
+              names_from = Phrase,
+              values_from = Frequency)
+```
+
+Take a look - our data is now WIDE!
+
+## Prepping data for modeling
+
+We've already run some linear regressions in previous weeks, and we got some practice interpreting the output. But there are a couple of things that we can do to our data before we feed it into `lm()` that will make the output more interpretable.
+
+WHY we do these things could fill an entire stats class. But knowing about them at a basic level is useful when running an analysis.
+
+The two things we'll learn how to do today are:
+
+-   Using effect coding to convert our group labels into numbers
+
+-   Using mean-centering to make the 0-point of continuous data represent an average
+
+### Effect coding (categorical data)
+
+In our Ngram data, we have two groups: college application and job application. Let's run a model with the data as-is so we can remember what the output looks like.
+
+```{r}
+summary(lm(Frequency ~ Phrase, data = applications))
+```
+
+The output tells us the size of the effect of phrase on frequency. Essentially, how does frequency change between the two phrases?
+
+But our models are more interpretable when everything we feed in is a number. We're going to use something called **"effect coding"** to convert the group labels to numbers. We'll do so using the `if_else()` function.
+
+When effect coding, we convert one group to -0.5 and the other group to 0.5. Remember that the effects in our linear model tell us how much Y changes when X changes by 1. -0.5 and 0.5 are separated by 1. In addition, in multiple regression, our model shows us the effect size when all other variables are held constant at 0. By making the values of our variable surround 0, we can, in a way, average the effects across each level of the categorical IV.
+
+```{r}
+applications <- applications %>% 
+  mutate(Phrase.e = if_else(Phrase == 'college application', -0.5, 0.5))
+```
+
+Now, if we run a linear model, you'll see that the way the IV is labeled in the output is easier to interpret, because we know which level of the IV is being treated as "lower" than the other one (it's the one we've coded as -0.5).
+
+```{r}
+summary(lm(Frequency ~ Phrase.e, data = applications))
+```
+
+This output shows that, on average, there is a difference of approximately 55 between the two phrases, where job application is higher than college application. Thus, there is a main effect of phrase on frequency.
+
+### Mean-centering (continuous data)
+
+In order to demonstrate the importance of mean-centering continuous data, let's run a linear regression with two predictor variables: Phrase and Year. Remember that if we want to see an interaction between two variables, we need to use the `*`, not the `+`.
+
+```{r}
+summary(lm(Frequency ~ Phrase.e * Year, data = applications))
+```
+
+There is indeed a main effect of Year, where the use of both phrases increases by 1.18 each year. However, adding Year into our model messes up our interpretation of the effect of Phrase - and you can see that the effect is completely different than it was before.
+
+That's because our model is showing us the effect of phrase when Year is held constant, or in other words, equal to 0. But this makes no sense - what would it even mean to try to predict this effect in Year 0? The data from Google only goes back to about 1800, and our data starts in 1922.
+
+In order to deal with this, we **"mean-center"** our data, which means we set the 0-point to be in the middle. To do so, we use a function called `scale()`, inside of a function called `as.vector()`.
+
+```{r}
+applications <- applications %>% 
+  mutate(Year.c = as.vector(scale(Year, center = T, scale = F)))
+```
+
+Now, let's run our regression again, but this time with `Year.c`:
+
+```{r}
+summary(lm(Frequency ~ Phrase.e * Year.c, data = applications))
+```
+
+And now our effect of Phrase is back to what we'd expect when we were just looking at main effects.
+
+## Making sense of our output
+
+Finally, let's talk about interactions. This tripped a lot of people up on the homework. Remember, if we have two predictor variables (or IVs), there are two possible main effects, and one possible interaction. Hence the three rows in our `lm()` output (excluding the Intercept row).
+
+The last row, labeled `Phrase.e:Year.c`, shows us whether or not there is an interaction.
+
+Let's plot all of this data so we can visualize what the interaction looks like. Below, we'll use `ggplot` to make a scatterplot graph where Year is on the X axis, Frequency is on the Y axis, and color is according to Phrase. We'll also plot a line of best fit. Let's use the function `as.factor()` on Phrase.e so R treats it like two groups.
+
+```{r}
+ggplot(applications %>% 
+         mutate(Phrase.e = as.factor(Phrase.e)), 
+       aes(x = Year, y = Frequency, color = Phrase.e)) +
+  geom_jitter(alpha = .4) +
+  geom_smooth(method = 'lm') +
+  theme_bw()
+```

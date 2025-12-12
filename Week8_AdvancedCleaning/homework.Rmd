@@ -1,0 +1,102 @@
+---
+title: "Lab assignment DUE 11/12"
+output: html_document
+---
+
+For today's homework, you're going to practice putting together everything we've learned thus far across coding assignments. You're going to scrape some data, clean it, analyze it, and plot it.
+
+I think this is probably your hardest homework yet. Give yourself adequate time to complete it.
+
+Let's say our research question is: **How did international migration change between 2016 (pre-Trump) and 2019 (post-Trump)?**
+
+### Question 1
+
+Load `tidyverse` and `tidycensus`. Use `census_api_key('your API key')` to load your API key (go back to the web scraping tutorial to see what your API key is).
+
+```{r}
+
+```
+
+### Question 2
+
+Use the `get_estimates()` function to load state-level population info in the year 2019. For the `product =` argument, use 'components'. (See more info about the `get_estimates()` function [here](https://walker-data.com/tidycensus/reference/get_estimates.html), and you can look back at our WebScraping tutorial to jog your memory as well.)
+
+```{r}
+
+```
+
+### Question 3
+
+Now do the same thing, but for 2016. Be sure to make a new dataframe, don't overwrite your other one.
+
+```{r}
+
+```
+
+### Question 4
+
+For each of your two dataframes, change the name of the `value` column using the `rename()` function to reflect the year. So in the 2016 dataframe, the `value` column should be called `value_2016`, and in the 2019 dataframe, it should be called `value_2019`. (If you're not sure how to use `rename()`, look it up!)
+
+```{r}
+
+```
+
+### Question 5
+
+Using `left_join()`, join your two dataframes together into a new dataframe. Use the argument `by = c('NAME', GEOID, 'variable')`.
+
+```{r}
+
+```
+
+### Question 6
+
+Filter your data so that you we only have data on international migration. (`INTERNATIONALMIG`). Also filter your data to get rid of Puerto Rico. This is nothing against Puerto Rico, but there is a very large outlier in its 2016 data that prevents us from making conclusions about the rest of the US.
+
+```{r}
+
+```
+
+### Question 7
+
+Pivot your data into long format, using `pivot_longer()`, so that there is one column that indicates the year, and another column that indicates the number of people who migrated internationally.
+
+```{r}
+
+```
+
+### Question 8
+
+Create a new column called `year.e`, where you've effect-coded your year column into -0.5 and 0.5. (I know, it's confusing. In class, year was continuous. But here, we're treating it as categorical, because we're simply comparing between 2016 and 2019, as if they were two groups)
+
+```{r}
+
+```
+
+### Question 9
+
+Run a linear regression, where `year.e` is the X variable and migration number is the Y variable. Output the results by wrapping `lm()` in `summary()`.
+
+Below the code chunk, explain what the results mean. What is the relationship between international migration levels in 2016 and 2019? Is the effect significant?
+
+```{r}
+
+```
+
+### Question 10
+
+Now, using your wide-format data, run a paired samples t-test. Explain (below the code) what your data mean for our RQ, and why you might be getting different results from your linear regression. (Hint: Think about paired vs independent samples t-tests!)
+
+```{r}
+
+```
+
+### Question 11
+
+Create a dot plot (using `geom_jitter()`) of your data, where the X axis is year and the Y axis is migration. How does visualizing your data in this way help you better understand it?
+
+```{r}
+
+```
+
+Hooray! You've answered your research question in 10-ish easy steps. You're officially a researcher. Congratulations.

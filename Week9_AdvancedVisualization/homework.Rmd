@@ -1,0 +1,129 @@
+---
+title: "Lab Assignment DUE 11/19"
+output: html_document
+---
+
+Final lab assignment EVER!!!! Are you proud of how far you've come? I certainly am. This is once again a pretty difficult lab assignment, as I'm asking you to integrate across several different lessons.
+
+For this assignment, we're going to continue to work with the election data. Let's start from scratch - click the broom button above your variable list to the right to clear all of your saved variables.
+
+DO NOT just wholesale feed this homework into ChatGPT. You may USE it for help, but your answers should still be rooted in what we've done in class. If you simply copy and paste from ChatGPT, and include functionality that we did not cover in class or that the question is not asking you to do, you will lose points.
+
+#### Question 1
+
+Read in the election data csv.
+
+```{r}
+
+```
+
+#### Question 2
+
+Calculate the percentage of the vote for each of the three major candidates: Zohran Mamdani, Andrew Cuomo, and Curtis Sliwa. This means you need to do the following within `mutate()`:
+
+-   Create a total vote column using `rowSums()`
+
+-   Create a Mamdani_total column and a Sliwa_total column, by adding across their multiple ballot lines
+
+-   Calculate the percentage for each candidate
+
+Try to do this all at once, within one single call to `mutate()`.
+
+```{r}
+
+```
+
+#### Question 3
+
+Pick a candidate. Make a bar graph that shows that candidate's share of the vote in each borough, averaged across election districts.
+
+```{r}
+
+```
+
+#### Question 4
+
+Add error bars!
+
+```{r}
+
+```
+
+#### Question 5
+
+On top of the bars, display the individual data points for each assembly district, using `geom_jitter()`.
+
+```{r}
+
+```
+
+#### Question 6
+
+Add a custom annotation to your graph and color the bars according to Borough, using a different palette from the default.
+
+```{r}
+
+```
+
+#### Question 7
+
+Time to make some maps! In the below code, do the following:
+
+-   Load the `sf` and `tigris` packages
+
+-   Using `tigris` and the `state_legislative_districts()` function, create an object with geometric information for each assembly district in New York state, called `assembly`. Be sure to use the argument `cb = T`.
+
+-   Mutate the GEOID column and the NAME column to be numeric (`GEOID = as.numeric(GEOID)` )
+
+```{r}
+
+```
+
+#### Question 8
+
+To deal with repeat Assembly districts across boroughs, create a new dataframe called `mayor_grouped` where you group by AD and get the average % of the vote each candidate received in each AD. (This means grouping by AssemblyDistrict and within `summarize()`, calculating a new column for each candidate).
+
+```{r}
+
+
+```
+
+#### Question 9
+
+Using the `parse_number()` function, create a new column in `mayor_grouped` called NAME (this is to match the name of the AD column in your legislative district dataframe), where the data only contains the number of the AD, without "AD " in front.
+
+```{r}
+
+```
+
+#### Question 10
+
+Using `inner_join()`, join together your legislative district data frame and your `mayor_grouped` data frame. Using `inner_join()` will ensure you're only saving legislative districts in NYC. Be sure to put `assembly` first when joining so that your dataframe stays in the correct format. Name the new dataframe `mayor_assembly`.
+
+```{r}
+
+```
+
+#### Question 11
+
+Now, using the `geom_sf()` function and `ggplot`, make a map of NYC assembly districts, where each district is filled according to the percentage of the vote that one of the candidates got. Take your pick which one you'd like to map. And use `scale_fill_continuous()` to change the colors.
+
+```{r}
+
+```
+
+#### Question 12
+
+One final task. Load in the csv file called `nyc_renters.csv`. This contains data on what percentage of people rent in each AD. Then, using `inner_join()`, join it with `mayor_assembly`. Specify that you'd like to join by GEOID.
+
+```{r}
+
+```
+
+#### Question 13
+
+Run a linear regression where your X variable is the percentage of renters and your Y variable is your candidate's vote share. What do you find?
+
+```{r}
+
+```
