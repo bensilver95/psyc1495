@@ -1,0 +1,74 @@
+---
+title: "Lab assignment DUE 10/1"
+output: html_document
+---
+
+Welcome to your lab assignment about web scraping.
+
+First, let's practice scraping census data using `tidycensus`. Load the package and your API key:
+
+```{r}
+
+```
+
+Using the `get_estimates()` function, pull in 2021 population estimates at the county level for your home state only:
+
+```{r}
+
+```
+
+Now do the same thing, but instead of at the county level, do it at the metro level (hint: `geography = 'cbsa'`, and include population broken down by RACE only.
+
+```{r}
+
+```
+
+Next, we're going to do something a little bit different. Instead of applying what we learned in class in a different context, I want you to learn a *new* package that can be used for web scraping.
+
+This package is very easy to use! So I think that you can learn how to use it on your own, by following the instructions in this assignment.
+
+The package is called `getwiki`. It allows you to pull in content and data about Wikipedia pages. First, you'll need to install it, using the `install.packages()` function. (Remember to put the name of the package in quotes when installing it.
+
+```{r}
+
+```
+
+Now, load the package into your environment using `library()`.
+
+```{r}
+
+```
+
+Go to the Packages tab in the bottom right window, find getwiki, and click on it. This will take you to a page with a bunch of links to help pages for the different functions in the package. Use these to figure out how to use the following functions.
+
+Let's start with the `get_wiki()` function. Use it to pull in [this](Gun%20violence%20in%20the%20United%20States) Wikipedia page, and save the text to a variable.
+
+```{r}
+
+```
+
+Display the text of the page:
+
+```{r}
+
+```
+
+This is just one page about gun violence on Wikipedia. Use the `search_wiki` function to find all Wikipedia pages that contain the phrase "gun violence".
+
+```{r}
+
+```
+
+Pick one of those other pages, and, using the `trend_wiki()` function, save the viewing trends of that page to a new dataframe.
+
+```{r}
+
+```
+
+Are there any trends? Any days where viewership numbers spike or dip?
+
+BONUS: Use the `plot()` function to create a quick and dirty plot of the trends data you just saved. `plot()` syntax looks like this: `plot(x,y)`. You would replace the x and y with the columns from your data from that you want to plot - the x variable would be the date and the y variable would be the number of views. Don't forget to include the name of the dataframe and the \$ sign to index the column.
+
+```{r}
+
+```

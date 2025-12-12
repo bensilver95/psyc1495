@@ -1,0 +1,100 @@
+---
+title: "Lab Assignment DUE 9/17"
+output:
+  html_document: default
+  pdf_document: default
+date: "2025-09-09"
+---
+
+Welcome to your first lab assignment!!!
+Are you excited???
+
+For this first assignment, you're going to practice some of the **coding basics** you learned in class on 9/10.
+
+It's okay for you to Google or use Chat-GPT for help on specific questions.
+But remember that this is graded for **EFFORT**, not accuracy.
+I'd rather you attempt something on your own and it be wrong than it be perfectly correct but you have no clue what it means.
+
+If you're struggling to figure out the answer to a question, **feel free to insert a comment** letting me know what's tripping you up!
+If something you do gives you an error, don't be afraid to read the error and try to figure out what it's telling you.
+
+First, let's test some knowledge of basic R functionality.
+**Create a variable** with a value of 6.
+Then, using that variable, **create another variable** that is equal to 24.
+
+```{r}
+
+```
+
+Now **create a variable** equal to the name of your hometown.
+**Display** the number of characters in the name.
+
+```{r}
+
+```
+
+**Create another variable** that is equal to your own name.
+**Divide** the length of your name by the length of your hometown name, *without using any numbers in your code.*
+
+```{r}
+
+```
+
+Okay, enough nonsense.
+Let's work with some real data!
+
+First, **load** the `tidyverse` package.
+
+```{r}
+
+```
+
+Now **load** in the data file that has incarceration trends for New York state.
+Make sure to **assign** it an object that you can re-use.
+Give the variable a name that describes the data.
+
+```{r}
+
+```
+
+This file has historical data on incarceration in NYS in both state prisons and county jails.
+
+Using indexing, **output** the value of the *jail* population in 2012.
+
+```{r}
+
+```
+
+**Create a new column** in your dataframe that displays the rate of total *prison* incarceration per 100,000 people, for each year.
+This is a common way of reporting incarceration rates.
+(*Hint: In class we multiplied the rate by 100. Here, you would multiple it by 100,000.*) How does the rate change over time?
+
+```{r}
+
+```
+
+Now **create a new variable** that says what percentage of the prison population is male.
+
+```{r}
+
+```
+
+What is the **average** of that percentage across all years in the dataset?
+(*Hint: Are there any blanks in the dataset? How do you deal with that?*)
+
+```{r}
+
+```
+
+Do the same thing - calculate average % of incarcerated people who are male - for the jail population.
+Then, **display** the average.
+Is it higher or lower than it was for the prison population?
+
+```{r}
+
+```
+
+You're done!
+
+To show me you've finished, click the Knit button above.
+That will create either an HTML or PDF version of this document, and will save it in your project folder.

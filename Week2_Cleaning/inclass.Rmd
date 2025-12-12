@@ -1,0 +1,210 @@
+---
+title: "9/17 In Class Tutorial"
+output: html_document
+---
+
+Welcome to our second coding basics tutorial. In this tutorial, we'll be picking up on where we left off last time. Today's lesson will focus on data summarization and *cleaning* your data. We'll be covering the following topics:
+
+-   Filtering data according to a condition
+-   Conditional statements
+-   The `tidyverse` pipe
+-   Grouping data and summarizing it according to different groups
+-   Dealing with missing data
+-   Combining data from different sources into one object
+-   Pseudocode
+
+# Loading in packages/data
+
+Let's begin by loading in the `tidyverse` package. Remember how to do that?
+
+```{r}
+
+```
+
+Next, let's bring in some data that we're going to work with, and save it to an object. We should remember how to do that too. Bring in the data file called `CCRB_complaints.csv` and take a look at it.
+
+```{r}
+
+```
+
+The Civilian Complaint Review Board is an NYC agency that handles complaints made against NYPD officers. These complaints might include things such as abuse of authority or excessive use of force. Their data is extensive. We'll use this dataset as we learn some more R basics.
+
+## Relational operators
+
+Most of the time, when you want to do things in R, you want to do them in *some conditions but not others.*
+
+**Relational operators** are the first key to making this happen. These are essentially inequality operators like the ones you would encounter in algebra.
+
+The following is a **relational statement.** This is a command involving a relational operator that returns `TRUE` or `FALSE` based on whether the statement is true or false.
+
+```{r}
+
+```
+
+Here are a few more relational statements. Do you expect each one to return `TRUE` or `FALSE`, based on what's written?
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+Here are the relational operators:
+
+-   `>` (greater than)
+-   `<` (less than)
+-   `>=` (greater than or equal to)
+-   `<=` (less than or equal to)
+-   `==` (is equal to--NOTE that it is *two* equals signs, *one* equals sign does something different)
+-   `!=` (is not equal to)
+-   `%in%` (is contained by; this is useful when you need to see whether the element on the left matches any of a vector of elements on the right)
+
+Here's a few examples of `%in%` in action, in case this is a little less intuitive than the others:
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+Note that `%in%` takes a *vector* on the right side, and looks for *full matches* from the element on the left to the elements on the right.
+
+## Filtering data
+
+Relational statements are often helpful when you are interested in filtering your data. We can use the `filter()` function in `tidyverse` to filter only the rows that match a certain condition. Filtering involves specifying a dataframe and a logical statement. When you filter a dataframe, only the rows in the dataframe with a `TRUE` in the logical statement will remain.
+
+For example, let's say we wanted to filter `complaints` to only include data from Manhattan.
+
+```{r}
+
+```
+
+Take a look at the number of rows in this new object, and at the Borough column. It now only includes Manhattan. Now, any data analysis you do with that object will only be done on complaints in Manhattan.
+
+## Conditional statements
+
+Sometimes, you want to run commands or set values based on whether certain things are true or false.
+
+Now introducing a new function, that'll let us create a new column that specifies whether a condition is true in an existing column: `if_else()`. (Please note the underscore! Although there is also a similar `ifelse()` function in base R, we recommend using the `if_else()` function in the `tidyverse` package.)
+
+In plain English, `if_else(condition, A, B)` essentially does the following:
+
+1.  Check whether a condition is true or false for each row in a column.
+2.  If the condition is true for that row, fill in the same row in the new column with value A.
+3.  Otherwise, if the condition is false for that row, fill in the same row in the new column with value B.
+
+For example, let's say we want to know whether more complaints occur in AM or in PM. We'll use the `mutate()` function, along with a relational operator and an `if_else()` statement, to create a new column that tells us the answer.
+
+```{r}
+
+```
+
+Let's do another one to determine which complaints happen at home. We already have a variable that says where complaints happen, but we can *binarize* it.
+
+```{r}
+
+```
+
+What's great about filtering is that we can calculate summaries (remember the `summarize()` function?) for either the whole dataset, or just the filtered dataset.
+
+Let's say we want to calculate what percentage of complaints occur during visits to someone's home. To do so, we can calculate the mean of our Home column. (The means of 1s and 0s will naturally be the percentage of 1s.)
+
+Full dataset:
+
+```{r}
+
+```
+
+Or, we can just calculate this number for Manhattan:
+
+```{r}
+
+```
+
+But if we want to see this statistic for each borough? Do we need to make filtered dataframes for each borough, then use `summarize()` separately on each one? ***NO!*** This is where `group_by()` comes in handy. `group_by()` allows us to group our data, and run calculations on each group at the same time.
+
+## The tidyverse pipe
+
+We're about to do some operations that require us to string multiple `tidyverse` functions together. `tidyverse` makes this really easy using "the pipe" ( %\>% ).
+
+The pipe does one simple, but key, thing: **takes the object on the left-hand side and feeds it into the first argument of the function on the right-hand side.** This means that:
+
+-   `a %>% foo()` is equivalent to `foo(a)`. Fine and good.
+
+-   `a %>% foo() %>% bar(arg = TRUE)` is equivalent to `bar(foo(a), arg = TRUE)`. Now, nested function calls read left-to-right!
+
+-   Most common use case: `df_new <- df_old %>% foo() %>% bar(arg = TRUE) %>% baz()` is equivalent to `df_new <- baz(bar(foo(df_old), arg = TRUE))`. Now, you can chain a series of preprocessing commands to operate on a dataframe all at once, and easily read those commands as typed in your script. No more accidentally not running some key preprocessing command that causes later code to break!
+
+-   take as their first argument the object to be operated upon
+
+-   return the same object (or an analog of said), but now operated upon
+
+Essentially all functions from the tidyverse are pipe-safe, but bear this in mind when trying to incorporate functions from base R or other packages into your tidy new world. The shortcut for typing the pipe on Mac is Cmd+Shift+M, and on PC it's Ctrl+Shift+M.
+
+Let's practice using the pipe with `group_by()` and `summarize()`, which is a very common use case. When we use the pipe, we *start* with the object we're operating on, rather than the function, because we pipe the object into the function, like so:
+
+```{r}
+
+```
+
+You can also use the `n()` function to calculate the number of rows in each group.
+
+```{r}
+
+```
+
+## Dealing with missing data
+
+Almost no dataset is perfect. Did you notice how many rows were equal to NA in the above calculation? Those are rows where Borough is blank, meaning we don't know what the borough is.
+
+There are a few ways of dealing with missing data. One way is to ignore it, and to be sure that you exclude it during specific calculations, with `na.rm = T`. But we may decide that we don't want to include a data point at all in our dataframe if it's missing crucial data. If so, we can filter out those rows using `is.na()`.
+
+```{r}
+
+```
+
+We can also use `replace_na()` to give blank values a more interpretable value.
+
+```{r}
+
+```
+
+## Combining data from multiple sources
+
+Sometimes, data might be spread across multiple spreadsheets, and you'll want to combine those for your analysis. For example, we can get more information about the officer penalties that came from a CCRB complaint from the `CCRB_penalties.csv` file. Let's bring that in
+
+```{r}
+
+```
+
+Notice anything these two dataframes have in common? The Complaint_ID column! We can use a function called `left_join()` to bring the two into one dataframe. R will automatically detect their shared column and join them based on it.
+
+```{r}
+
+```
+
+You'll notice there are a lot of NAs in the new columns from `penalties` because many complaints don't lead to penalties. There are other types of join functions, such as `right_join()`, `inner_join()`, and `outer_join()` that deal with differences between the joined dataframes in different ways. We don't have time to get into it here.
+
+# Pseudocode
+
+This is **so important to do before you write a single line of code.**
+
+Before you try to write any code, you should talk through what you want to do in plain English before you actually try to code it. This is how you will actually figure out what you need your code to do, and then what functions you need to do the things you want.
+
+For example, let's say you want to know how many officers receive any kind of penalty in each borough. How do you actually go about calculating that? We need to *operationalize* this statement into a series of pieces that can be directly translated into R commands. Based on what we learned today, here's what the steps might be:
+
+1.  Get rid of rows where the Officer_Penalty value is NA
+2.  Make a new variable based on Officer_Penalty, with a 0 for No penalty and a 1 for everything else
+3.  Group by each borough and sum up the number of 1s
+
+Each of these instructions that I've laid out corresponds to a distinct R command--in this case, we need to:
+
+1.  Use `na.rm()` and `filter()` to get rid of rows where Officer_Penalty value is NA
+2.  Use `mutate()` and `if_else()` to create a new variable based on Officer_Penalty
+3.  Use `group_by()` and `summarize()` (and the pipe!) to create a summary of the new binarized penalty column. To determine the number of officers, we might want to use a function like `sum()` in the `summarize()` function.
+
+And now we can go ahead and write the code to do this bit of calculation. This pseudocoding exercise was pretty brief. Pseudocoding can be quick, but it can often become complex for larger data processing or analysis tasks! Still, the time you take to brainstorm some pseudocode will save you time you might have otherwise spent puzzling over which functions to use and how.

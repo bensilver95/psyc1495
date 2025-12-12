@@ -1,0 +1,659 @@
+---
+title: "9/10 In Class Tutorial"
+output: html_document
+---
+
+# Coding Basics
+
+Welcome to the first coding tutorial for PSYC1495!
+This tutorial is adapted from a coding boot camp run by graduate students in the Psychology department.
+
+This tutorial is all about the **basics of coding** (we use the terms coding and programming interchangeably).
+You'll learn about the R interface, how the language works, and a bit about how to load in data.
+
+# Getting oriented
+
+What do we actually mean when we talk about programming?
+
+Programming is telling a computer to do some action to some input info to get output info that you want.
+When it comes to working with data in R, programming is how we tell R to load data, process it, plot it, analyze it, and so on (everything!).
+
+## Where are we?
+
+We're on Posit Cloud, which is an online server that runs a program called R Studio.
+R Studio runs the coding language R, which is commonly used in data science and science research.
+
+## What is this file?
+
+This is an R Markdown file (ends in .Rmd).
+R Markdown files allow you to combine regular text, like this, with code chunks that run code, like the below:
+
+```{r}
+
+```
+
+If you run that (press the Play button on the right side), you'll see the output of the code.
+The ability to combine text and code in one document makes .Rmd files perfect for coding tutorials such as this one.
+You can also switch above between viewing the tutorial in "Source" mode and "Visual" mode, which looks a little nicer.
+
+## The RStudio interface
+
+We've already gone over some of the basics of Posit Cloud.
+Right now, we're basically running RStudio within Posit Cloud.
+
+If you were to download RStudio onto your own computer, it would look very similar.
+
+### Console window
+
+In the automatic configuration of RStudio's panes/mini-windows, the console is likely in the bottom left.
+In general, you can type R commands in the console, and press Enter to execute those commands.
+This is where you can execute R code!
+
+*Note: the console is a great place to try out new stuff, but it doesn't save your code as one piece the way a script does -- for the most part it is good practice to be writing scripts.*
+
+### Editor window
+
+In everyday RStudio life, though, you'll likely spend most of your time in the editor window (default position should be upper left pane).
+This is where you **edit R script files.** R scripts are files that contain R code typed out that you can write once, and then run as many times as you want.
+You'll do the vast majority of your code writing in script files, so that you can have records of the data processing and analyses you've written.
+
+### Environment/history window
+
+In this window (default position: upper right pane), you can see some useful stuff pertaining to your current R session:
+
+-   Environment: this is where you can see all of the data you currently have loaded in your R session, or any other variables you've created.
+-   History: this is where you can see your command history of all the R commands you've run in this session. Use it wisely!
+
+### Files/Plots/Help window
+
+In this window (default position: lower right pane), you can see even more useful stuff:
+
+-   Files: This is a rudimentary file browser, in case you want to use this to click through your folders and open R scripts.
+-   Plots: If you create a graph, it appears in this tab.
+-   Help: You can search for and read documentation of any R function here. I spend a lot of time here!
+
+## Installing and loading packages
+
+In R, you can install software packages.
+A software package is a collection of functions that are related in some way.
+Installing these packages allows you to expand/enhance the things you are capable of in R.
+
+Think of it like installing an app on a smartphone.
+When you get your smartphone, it can on its own do a bunch of cool things: set alarms, access the internet, and take notes.
+But you can also install apps (social media, airline apps) to make it more powerful/versatile.
+
+I've already installed the most important package for this tutorial for you, which is called `tidyverse`.
+
+Then, once a package is installed, you again have to tell R to *load* the packages into your active R session.
+This allows you to quickly and easily call the functions in those packages.
+While you only have to install packages once, you have to load them in every R session that you want to use them.
+(Why they don't load automatically? I don't know!)
+
+```{r}
+
+```
+
+# Interacting with files
+
+Before we actually get started with messing in R, we need to understand how R interacts with files.
+If you want to load in or save data, or save image files, R needs to be able to read in and write out files.
+When using RStudio on your computer, there are a number of ways that you can "tell" R where your files are located.
+This includes understanding your working directory (the location that your R script is operating from) and file paths (where on your computer a file is located).
+
+One of the benefits of using Posit Cloud is that we don't have to worry about these things as much, and so we won't be covering them here.
+(If you're interested in learning more about it, stop by my office hours!) All you need to know is that each project in Posit Cloud has its own folder on the Posit Cloud server.
+In that folder, you'll have your R markdown files (such as this one, and one for your lab assignment), and any .csv files with data that you need to read in.
+If you're creating graphs, you'll save them as images to this same folder.
+
+You can upload files from your computer, and download them TO your computer from Posit Cloud.
+You can see all of the files associated with this project, and the upload and download options, from the Files tab in the bottom right hand corner pane.
+
+## Reading data into R
+
+Do you see a file titled `incarceration_trends_state.csv` in your Files tab?
+This file is located in the folder for this R project, and contains data on incarceration states in every state for the past 50 years.
+
+To examine this file in R, place the file name inside the parentheses in the `read_csv()` function.
+(The `read_csv()` function comes from the `tidyverse` package and will only work if you've loaded it in with `library()`.)
+
+```{r}
+
+```
+
+After running the line above, you will see a preview of the file in R.
+Sometimes this kind of quick preview is helpful!
+However, in order to do more with the data, you will want to save a copy of the file as an object in your R environment.
+(You can tell that the file has *not* yet been loaded into your environment by taking a look at the Environment tab in the upper right section of your RStudio window. Unless you were working in R before this workshop began, you will see a message noting that it is empty!)
+
+## Loading the file as an R object
+
+To load the file into your R environment, give it a name (e.g., `state.trends`) and use the `<-` (the *assignment operator*) to save the data contained in the CSV into an R object with that name.
+
+```{r}
+
+```
+
+Once you have done so, you will see this object listed in the Environment tab in the upper right section of your RStudio window.
+You can click on it to view it in full.
+
+## File paths
+
+One last thing before we move on.
+A minimal understanding of file paths is important, even when using Posit Cloud.
+So let's do an exercise.
+In the Files tab, click on the +Folder button and create a new folder called "data".
+Move the `incarceration_trends_state.csv` into the data folder (Click the checkbox next to the file, click the gear, and click "Move".)
+
+Now the .csv file is in the folder called "data".
+Any idea how we might access it?
+
+```{r}
+
+```
+
+The key thing here is you have to specify the correct file path.
+If you don't, you'll get an error.
+
+# Variables
+
+-   a **variable** is how we store information in a way that the computer can operate on
+-   it has a **value:** the info itself
+-   and a **name:** the cue by which we call upon the info to the computer (we can make this name up to be whatever we want!)
+
+If you think about how variables like x and y are used in algebra, calculus, etc, that can be a useful way to conceptualize them.
+
+Variables can contain numbers.
+We *assign* a value to a name.
+
+```{r}
+
+```
+
+They can also contain other stuff (literally almost anything) but we'll talk about this later!
+
+Variables live in the **environment**.
+The environment is your workbench in R: this is where all data are held, so that you can access and manipulate that data using R commands.
+It's sort of like R's working memory, where information is held for immediate use.
+You can see all the objects currently saved in your environment in the Environment pane.
+
+Information doesn't just exist in the environment--it can also be printed to **console.** Remember that the console is the place where you talk to R (type in commands), and R talks back to you (shows you the result of those commands).
+
+The console is a great place to check the contents of variables, and perform quick calculations.
+However, information printed to console is *not automatically saved to a variable,* so if you know you will want some data for later you must assign it to a variable in your environment!
+
+Since variables are labels for pieces of information, a variable name can be used to refer to any piece of data where you would otherwise call that data directly.
+For example:
+
+```{r}
+
+```
+
+Variables don't just have to contain pure numbers; you can assign the output of commands to variables.
+
+```{r}
+
+```
+
+And as we saw earlier, you can assign whole dataframes into variables.
+We'll be able to access all the content of a dataframe in a variable so we can do data manipulation, plotting, and stats on it later.
+
+```{r}
+
+```
+
+With regards to variables, you can make the name of a variable almost whatever you want, within reason.
+A variable name can legally contain:
+
+-   letters (upper or lowercase, R is case sensitive!)
+-   numbers
+-   period (.) and underscore (\_)
+
+R (and basically all programming languages) require variable names to START with a LETTER.
+Other allowed characters can be anywhere in the variable name except for first.
+
+Beyond this, here are some recommendations we strongly urge you to follow as well when naming variables:
+
+-   Name variables informatively, not arbitrarily! The name of a variable should tell you something about what information it contains. `raw.data` is better than `d`.
+-   Separate words in multi-word variable names using one of the following conventions (but be consistent!):
+    -   underscore_separated_names
+    -   period.separated.names
+    -   camelCaseNames
+-   Name variables succinctly, but informatively. Abbreviations are okay if they are standard throughout your code. `max.val` is okay instead of `maximum.value`.
+-   When in doubt, use lowercase letters.
+
+# Data types
+
+So what kind of data can be stored and manipulated in R?
+There are different "types" of data that programming languages know how to handle.
+Each is encoded in a slightly different way, and can have different things done to it.
+
+## Numeric data
+
+Numeric data encompasses any (real) number.
+Positive, negative, integer, decimal, all fine.
+
+```{r}
+
+```
+
+### Arithmetic operators
+
+You can do your usual math on numeric data, like so:
+
+```{r}
+
+```
+
+The basic arithmetic operators are specified as:
+
+-   `+` addition
+-   `-` subtraction
+-   `*` multiplication
+-   `/` division
+-   `^` exponent
+-   `()` parentheses
+
+R obeys PEMDAS!
+
+## Logical data
+
+Logical data are a special case of numbers, representing `TRUE` and `FALSE`.
+
+Note that this is case-sensitive: R requires `TRUE` and `FALSE` to be written in all caps!
+
+Logical data can be math-ed on as if it were numeric; `TRUE` is 1 and `FALSE` is 0.
+This is especially useful when multiplying--
+
+```{r}
+
+```
+
+Logical data are used most often as informational flags.
+To be revisited...
+
+## Character data
+
+This is letter/word-based data.
+A piece of character data is called a **string.**
+
+R understands that this data is made up of text, and treats it in a special way.
+You might encounter this if you are storing free-response text data in R, or perhaps if you have a list of word-based stimuli stored in R as part of your task data.
+
+```{r}
+
+```
+
+Here are just a couple of the functions that specifically operate on character data.
+
+You can coerce things to upper or lowercase with the right function:
+
+```{r}
+
+```
+
+You can also count the number of characters.
+Note that spaces count as characters!
+
+```{r}
+
+```
+
+Of note is that you canNOT do arithmetic on strings.
+
+```{r}
+
+```
+
+The following will return an error if you try to run it:
+
+```{r}
+
+```
+
+## Dataframe columns have data types too
+
+It's not only single pieces of information that have a defined data type.
+Whole dataframe columns of values have data types as well.
+(This is a requirement of dataframe columns: that they are composed of a set of values that are all the same data type.)
+
+R will tell us a bit about the data types in our dataframe columns when we print the dataframe to console.
+Let's take a look:
+
+```{r}
+
+```
+
+Just below the name of each column, we see some abbreviations: `<chr>` and `<dbl>`.
+These are the data types of these columns.
+`<chr>` means that all values in that column are character, or text, data.
+`<dbl>` stands for "double", which is R-speak for numeric data with decimal-point precision.
+
+Just as you can do arithmetic on single numeric values, and text-manipulation operations on single character strings, you can do these operations on whole dataframe columns as well.
+We'll see this soon!
+
+Now, we'll talk a little bit more about these data structures, like dataframes, that hold multiple pieces of data.
+
+# Data structures
+
+## Data frames
+
+This is the data structure where it happens!
+Imagine your usual rectangular Excel spreadsheet that you might have for your study data, where each column of the spreadsheet contains a meaningful category of information (e.g. subject ID, task condition, trial response), and each row contains one observation of information (one subject, or one trial within subject, etc).
+A dataframe is basically that.
+
+A **dataframe** is a special rectangular data structure in R*.* Each column contains all the observations of a particular meaningful grouping.
+Each row contains one complete observation from all the columns.
+Each observation can be a subject, a trial, a group, whatever--any one meaningful something.
+
+Notice that dataframes can be read in from CSV files.
+These files can be opened in other programs like Microsoft Excel, where you can see that they look like any garden-variety spreadsheet.
+
+### Working with dataframe columns
+
+Very frequently, when working with dataframes, we will need to create new columns, or modify existing columns.
+The function we'll use to do this is `mutate()`.
+
+A note before we jump in: `mutate()`, and many of the other R functions we'll be using in the workshop, are not included in default, or base, R.
+They are part of the **tidyverse,** a group of R packages designed to make data manipulation and exploration smoother.
+In order to be able to access these functions in a later R session (after you close it and reopen it again), you need to put the following command in the first chunk of your R Markdown document and run the command *first, before any other code is run*:
+
+```{r}
+
+```
+
+Once you've loaded the tidyverse group of functions, you can now use them in R as usual.
+Now we're ready to explore these functions!
+
+The first argument that `mutate()` takes, or information it needs to be able to work, is what dataframe we want to operate on.
+All of the rest of the function works because `mutate()` knows which dataframe we are working inside.
+
+After you specify the dataframe in question, we then specify pieces of information in pairs:
+
+1.  The name of the new dataframe column you wish to create
+2.  How you want to create that new column
+
+The syntax for creating these new columns is `new_column_name = function(old_column_name)`.
+For example, if we want to create a new column containing the percentage of people in prison:
+
+```{r}
+
+```
+
+Notice that the dataframe appears to have a new column, with the name and the contents we specified.
+Each row of `prison_percent` contains the value from the `total_prison_pop` column divided by the value of the `total_pop_15to64` column.
+Exactly as intended!
+
+However, remember that **this content is not saved back into the `state.trends` variable unless we re-assign it to the `state.trends` variable name.**
+
+We would need to use the `<-` operator and re-assign this info into `state.trends` to overwrite the OLD dataframe with the NEW one, containing the extra column.
+
+```{r}
+
+```
+
+We can use the same strategy of overwriting the old content of a variable to modify the content of a dataframe column without creating a new one.
+
+In this case, we re-use the name of an existing column on the left side of the equals sign inside of `mutate()`.
+Similar to overwriting an existing variable, this will overwrite the existing column with some function applied to the old value of the column.
+
+```{r}
+
+```
+
+In the output above, see that the `state_name` column is still where it was, but now all of the state names are lowercase instead of having the first letter capitalized.
+
+In the commands above, we have been accessing the columns of our `state.trends` dataframe by typing the column names "naked", as if they were variables in the environment.
+However, when we look in the Environment tab in the top-right, we do not see these column names as their own variables!
+They live *inside the dataframe.* `mutate()`, and other tidyverse functions that we will use, have the **special ability to allow dataframe column names to be typed on their own, like free-standing variables, inside of these functions.** Other functions will not allow this, so be careful in later explorations of R.
+
+### Summarizing dataframe columns
+
+Other times, when working with dataframes, we will need to summarize over the values of existing columns.
+The function we'll use to do this is `summarize()`.
+
+Just like `mutate()`, and pretty much every other tidyverse function, the first argument that `summarize()` takes is what dataframe we want to operate on.
+
+After you specify the dataframe in question, we then specify pieces of information in pairs, much the same way as we did with `mutate()`: `new_column_name = function(old_column_name)`.
+
+The difference here is that instead of creating a whole column as our output, with the same number of rows as the original data, we need to summarize over all rows in the column, producing *one row of output.* For example, calculating the mean or the standard deviation of a column of data will take the entire column as input, returning a single value as output.
+In general, descriptive statistical operations are typically of this type.
+
+```{r}
+
+```
+
+### Indexing into dataframes by column
+
+Sometimes, however, you may need to access the content of a dataframe column outside of `mutate()`, `summarize()`, or another tidyverse function.
+Remember that tidyverse functions have the special ability to let you call column names with "naked" variable names, and this ability works because you have to feed in the name of your dataframe as the first argument to the function.
+That's how the function knows where to look for the column.
+Other parts of R don't work this way, so sometimes we need to use a different technique.
+
+For example, we know there is a column called `state_name` inside of the `state.trends` dataframe.
+Inside of `mutate()`, for example, you can call this column just by calling `state_name`:
+
+```{r}
+
+```
+
+However, if we try to calculate the character lengths of each state name *outside* of `mutate()`, it doesn't seem to work:
+
+```{r}
+
+```
+
+Because we are outside of `mutate()`, we do not have the ability to call dataframe columns on their own.
+We have to use another method to tell R which dataframe a column lives in.
+
+We use a special operator to do this: the dollar sign `$`.
+`$` tells R when a variable name, in this case a column name, is a sub-variable of a larger variable, in this case a dataframe.
+In this way, we can tell R that `state_name` is not floating around on its own, but is a column in the dataframe `state.trends`.
+
+```{r}
+
+```
+
+You may also notice when typing in RStudio, that if you type `state.trends$`, you'll suddenly see a little tab-complete selector pop up, listing out the names of all the columns in `state.trends`.
+You can either type more to narrow down to the column you want, and then hit Tab to auto-complete the column name, or use the arrow keys to scroll up and down through the column names to select the one you want (and hit Tab to auto-complete in this case as well).
+
+Note that when you call the column in this way, the printed output doesn't look like it did when we printed the entire dataframe.
+When you call a dataframe column on its own using `$`, R temporarily treats it as separate from the dataframe that it came from.
+
+```{r}
+
+```
+
+A dataframe column on its own like this, separated from the rest of the dataframe, is a *vector.* Vectors can exist totally separate from dataframes, or they can be bound together as dataframe columns.
+A vector can have any number of values in it, but is always width 1 (which makes sense when you think of them as columns of data).
+
+### Indexing into dataframes by row
+
+When you need to access individual pieces of information inside of a vector, you'll do that by calling the vector and adding an additional "address" to specify which piece of data inside the vector you want.
+This address is called an **index.**
+
+To tell R that you are indexing into a vector, you put the index inside hard brackets [] after the name of your vector variable.
+
+You can index one piece of data, by putting one index number inside the hard brackets, to index the nth value of that vector.
+R starts indexing at 1; the first element in your vector is at index 1.
+
+You can only index into your vector using VALID indices; that is, indices that actually correspond to elements in the vector.
+Essentially, you can't index using a number that is larger than the length of your vector.
+
+```{r}
+
+```
+
+You can also index multiple pieces of data out of a vector.
+This returns another, shorter, vector!
+You do this by putting a valid numeric vector inside the brackets.
+Remember the colon `:` operator from above?
+It's handy to create vectors for indexing a sequence of values:
+
+```{r}
+
+```
+
+You can also index to *exclude* elements from a vector, using negative numbers.
+This will return a vector *missing* the values you negative-indexed.
+
+```{r}
+
+```
+
+# Data types pt 2
+
+These data types make more sense when presented as vectors/dataframe columns--you'll rarely need to deal with objects of these types that are length 1.
+Now that you know about vectors & dataframes, we'll take a look at the following data types:
+
+## Factor data
+
+Character data, as described above, is R's all-purpose data type for text-based data.
+But R knows that sometimes you might have a column composed of text to label your within-subject task conditions, between-subject groups, etc.
+**Factor data** is a data type built on top of character data that gives you special properties that are useful when a column/vector contains *grouping* information.
+
+For example, we can consider the `region` column from the `state.trends` dataframe we loaded previously.
+This column contains categorical information about which region each state belongs to, so this is a natural fit for the factor data type.
+
+```{r}
+
+```
+
+Observe how this vector now has *levels;* these are the different categories of the variable.
+Factor levels are ordered alphabetically by default; you can reorder the levels into a more meaningful order if you want.
+
+We won't worry too much more about factor data for now, but here are a couple of factor data's pros and cons relative to regular character data:
+
+-   PROS: You get special properties that help when graphing, and when creating models for data
+-   CONS: While factor data is composed of text, it doesn't behave like character data in every single case, and so you have to be very careful with factor data because sometimes you don't get the outputs you expect if you were to run the same operation on character data.
+
+## Non-data data
+
+You know what's the worst?
+Missing data!
+But it happens to the best of us.
+When you have a missing data point in an Excel spreadsheet, you might leave that cell blank.
+But in R, you need to put a placeholder in that spot.
+There's a special data type, `NA`, used as the missing data placeholder.
+Check out the population stats in Alaska pre-1968 - it all comes up as NA.
+That just means there's no data there.
+
+As we saw earlier, when you call summarizing functions on a vector containing `NA`, the summary value will be `NA`...
+
+```{r}
+
+```
+
+unless you specify in the function that you want the value to be calculated as if the `NA`s aren't there.
+
+```{r}
+
+```
+
+# Functions
+
+We've already used a variety of functions (`mean()`, `mutate()`, and more), so the behavior of functions should be somewhat familiar to you.
+**Functions take inputs, do stuff to them, and give you an output that's had the stuff done to it.**
+
+## Anatomy of a function
+
+Right now, we'll take a moment to go over the pieces of a function a little more formally so you know how to use them to their fullest extent.
+
+Below is an example (fake) function call.
+This function takes the inputs `input1` and `input2`, does the function `function()` to those inputs, and returns an output which can be stored in a variable.
+Here are the relevant pieces:
+
+`output <- function(argument1 = input1, argument2 = input2)`
+
+-   `function()`: This is the function that will DO SOMETHING to your inputs. Whenever you are referencing a function by name, you should always write it with the two parentheses () after the function name so people know you're referring to a function and not a variable. The name of a function will tell you something about what a function does. You can/should look it up if you're not sure though!
+-   `argument1`, `argument2`, etc: These are **arguments** to a function--this is the information that a function *expects* and *is prepared to operate on*. The name of an argument will tell you something what an argument represents and how it should be formatted. (More on this later)
+-   `input1`, `input2`, etc: These are variables that you created that will actually get fed into your function. This is the information that will actually get operated on. These can be data that live in your environment, or these can be settings (like switches and knobs, if your function was an actual machine) that are turned to a specific value.
+-   `output`: This is the variable that will hold your output information. As you can see, we are *assigning* the value that's output from `function()` to the variable `output` using the `<-` left-facing arrow operator. Just like before with printing variable values to console, if you run a function without assigning its output to a variable, the output will print to console (so you can read it) but it will not be stored anywhere (so you can't perform any further operations on that output).
+
+# Getting assistance
+
+## On your own
+
+### The help docs {#the-help-docs}
+
+In RStudio, you can use the "Help" tab in the lower right corner of your window to search for the help page for a function you're having trouble with.
+You can type the name of your problem function into the search bar and pull up the help page!
+
+You can also use the function `?` in console, in front of the function you're looking up, to pull up the same info in the "Help" tab.
+For example, to open the help page for the `mean()` function, I would run `?mean` in console.
+
+The help document for the function you're looking for should have a description of:
+
+-   the function's arguments
+    -   what type of data they expect
+    -   what part of the function's behavior they control
+-   what they intend the function to be used for
+-   explanations of any equations used inside the function
+-   examples of function calls that work, that you can copy and paste into console and run to inspect output
+
+### The internet
+
+Sometimes you'll run into issues that the help docs don't completely resolve, and that's okay.
+The internet is here to help, if you know how to ask it!
+
+#### How to Google for help
+
+Sometimes it can be unclear what keywords to enter to find a solution to your code issue.
+The following strategies can give you a handle:
+
+-   Start your query with "r"--it's not perfect, since it's a single letter and not a full word like "python" or "matlab", but this helps to return results that are R-related
+-   If you're looking for help with a function from a specific package, include the package name in your query
+-   If a command you're trying to run fails, and returns an error message, enter the name of the function and *copy and paste the error message into the query*
+    -   your query should look like "r [package name] [function name] [text of error message]"
+-   If you aren't getting an explicit error message, but a command you're trying to run is not behaving as you expect, try "r [package name] [function name] won't [the task you're trying to do]"
+-   If you have your pseudocode planned out, but don't know what functions to use to execute your pseudocode, try "r how to [your pseudocode here]"
+    -   be sure to remove any variable names that are specific to your own data before you Google
+
+#### Stack Overflow and other Q&A sites
+
+Often, a successful Google search for help will yield links to posts on Stack Overflow, a Q&A site where people can post questions about code to solicit answers from other users, or from other Q&A sites (email records from old R help mailing lists, for example).
+
+When parsing a Stack Overflow post, look for the following:
+
+-   Read the question to determine how similar this asker's situation is to yours (and thus how likely the posted answers are to solve your problem)
+    -   Good question posts will have example code that should run if you copy and paste it into console. If this code is there, you can run it to see if it looks like your own data situation
+-   Check out the provided answers
+    -   If there is a green check mark on the left of the "top" answer, the question asker has "accepted" the answer, or marked it as the most helpful answer. It has solved the asker's problem, and hopefully will solve yours too!
+    -   Answers may have upvotes from other users (not the question asker). You can browse answers, including the "accepted" answer, to try multiple possible solutions and find the one that's best for your situation.
+
+Other Q&A sites may or may not have as smooth of a setup as Stack Overflow, but if you are careful to inspect the question to see if it's relevant to your own problem, you should be able to assess whether the answer provided will help you.
+
+#### R user blogs
+
+Plenty of R users post little tutorials (like this one!) online to help other R users.
+I've encountered many of these blog posts while Googling for help, and found many of them useful!
+Sometimes these may be from larger sites like [r-bloggers.com](https://www.r-bloggers.com/) that post submissions from many users, or they may be from personal blogs maintained by one person.
+
+A good blog post will, like a good Stack Overflow post, have example code that you can copy/paste into your own console and run to follow along with the blog post.
+This way, you can see if the blog post indeed applies to your particular issue.
+
+#### Ask Chat-GPT (**NEW! WOW!**)
+
+There are plenty of ways generative AI might not be all it's cracked up to be, but I have found that coding help is one of its strengths.
+Ask it a question in plain language or copy over an error message: it will almost always be able to help!
+And it will usually provide a useful example.
+
+Just be careful: Don't copy and paste its example back into your code blindly.
+Test it out and make sure it works properly and that you understand what the code is doing.
+As we all know, generative AI can make mistakes.
+
+#### Ask me
+
+Coding in psychology is a means to an end; it's a way to conduct research and statistical analyses.
+I am available to help you as much as you need.
+Come to my office hours, email me, find my home address and throw rocks at my window until I come outside - don't be afraid to ask me for help (although preferably don't do that last thing).
+
+# Next week
+
+Next week we're going to learn some more basic concepts that will help us *clean* our data.
+Things like:
+
+-   Filtering data according to a condition
+-   Grouping data and summarizing it according to different groups
+-   Dealing with missing data
+-   Combining data from different sources into one object
+-   Changing the format of our dataframe

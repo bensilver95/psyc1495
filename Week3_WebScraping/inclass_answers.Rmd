@@ -1,0 +1,435 @@
+---
+title: "In-class coding tutorial: Web scraping"
+output: html_document
+---
+
+Welcome to your **web scraping tutorial**. In this tutorial, we're going to learn how we can use R to pull data from various online sources - database websites, social media, news websites, etc. - directly into R in a format that makes it easy to analyze.
+
+To do this, we're going to rely on different R packages that are specialized to pull data from various sources. The most general R package for scraping web data is called `rvest`, but there are others that people have made to work with specific websites. *Most of these packages are just made by random people.* This means that some of them are well-maintained - they have few bugs and work well - while others were made a long time ago and might not be updated as the website they interact with is updated.
+
+Remember that to install a new package, you usually have to type `install.packages('name of package')`. However, I have gone ahead and pre-installed all of the packages you'll need in this project. If you want to use these packages in a different project, you'll have to install them yourself.
+
+Think of today's tutorial as a collection of mini-tutorials, where we learn about various web-scraping packages. Here is a list of packages that we'll learn about today:
+
+## tidycensus
+
+This package interfaces with the US census bureau data website, which means it's really easy to load US census data into R. Many of your projects might involve analyzing population statistics according to different demographic categories or geographic groupings.
+
+The first thing you need to do is create an API key. To do so, go to <http://api.census.gov/data/key_signup.html> and fill in Columbia University and your email. In a few minutes, you'll receive an email with a link to activate the API key, and a long string of letters and numbers that is your API key. Let's load in the required packages and tell the `tidycensus` package what our API key is.
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+census_api_key("API key here")
+
+```
+
+Now we're ready to start scraping data! The simplest `tidycensus` function is called `get_estimates()`, which allows you to get population estimates from any year. These estimates are based on the decennial census data.
+
+There are several important arguments to provide to the `get_estimates()` function:
+
+-   `year`: What year you want data from.
+
+-   `geography`: The scale of the data you want to pull. You can get data at the state level, county level, etc. You can see the list of possible options if you type `?get_estimates()` in the console, and look at the geography argument on the help page.
+
+-   `product`: The type of variables you want to pull. I'll explain more in a moment.
+
+Let's start with a really simple call for the population of each state in 2023.
+
+```{r}
+pop <- get_estimates(
+  year = 2023,
+  geography = "state",
+  product = "population",
+)
+```
+
+Take a look at the dataframe. You have information about the population in each state, and how the population has changed in the last year. If you had written `geography = 'county'`, you'd instead have these estimates for every county. You can subset the data with the `state` argument:
+
+```{r}
+popNY <- get_estimates(
+  year = 2023,
+  geography = "county",
+  product = "population",
+  state = 'New York'
+)
+```
+
+You can also get the population data broken down by Age, Race, Sex, and Hispanic/Non-Hispanic by passing "characteristics" to the `product` argument, instead of population.
+
+```{r}
+popNY_demo <- get_estimates(
+  year = 2023,
+  geography = "county",
+  product = "characteristics",
+  state = 'New York'
+)
+```
+
+To get the labels for the different demographic variables, you have to specify the `breakdown` and `breakdown_labels` arguments:
+
+```{r}
+popNY_demo_labels <- get_estimates(
+  year = 2023,
+  geography = "county",
+  product = "characteristics",
+  state = 'New York',
+  breakdown = c('RACE','SEX'),
+  breakdown_labels = T
+)
+```
+
+If you look at data pre-2020, there are a few other products you can specify, such as "components", which gives you information on how many people have been born, died, migrated into or out of the state, etc.
+
+The `get_estimates()` function is very simple and easy to use, but it's also very limited if you want data before 2016.
+
+For more complete data, there are two other functions that you can use: `get_decennial()` and `get_acs()`. `get_decennial()` gets you data from the actual census that occurred in 2020, 2010, or 2000, while `get_acs()` gets you data from the American Community Survey (ACS) data, which surveys a representative sample of the population on either a 1 year or 5 year basis, and then provides estimates based on that sample.
+
+Since these datasets are more extensive, there are literally tens of thousands of variables/population breakdowns you can pull, and the syntax is a bit more complicated. I don't think we'll have time to get into that today, but if we do, we can do so below:
+
+```{r}
+
+```
+
+If you want to learn more about `tidycensus` you can do so [here](https://walker-data.com/census-r/an-introduction-to-tidycensus.html).
+
+Running these calls uses up a lot of memory. Before we move on, let's reset our session's memory by clicking Session above, and then clicking Restart R and Clear Output.
+
+## ngramR
+
+This package accesses data from Google n-gram, which is a cool database that Google maintains that allows you to search for how the usage of terms has changed over time. It calculates usage based on its database of books and websites.
+
+This data could potentially be interesting if you want to know how certain ideas - social categorizations, policies, fears - have changed over time in the view of the general public. Go to <https://books.google.com/ngrams/> to play around with it and see how it works.
+
+As always, let's first load the package:
+
+```{r}
+library(ngramr)
+```
+
+The simplest function in this package is `ngram()`. You can pass phrases, start and end years, etc.
+
+```{r}
+
+n <- ngram('mass incarceration',
+           year_start = 1900,
+           year_end = 2022)
+
+```
+
+The values right now are really small. Let's multiply it by a very large number so we can more easily see the differences.
+
+```{r}
+
+n <- n %>% 
+  mutate(freq_rescaled = Frequency*10000000000)
+
+```
+
+Now we can really easily see how much more frequently the term has been used in the past 25 years. We can also search for multiple phrases at once:
+
+```{r}
+n2 <- ngram(
+  c('mass incarceration','war on drugs'),
+  year_start = 1900, 
+  year_end = 2022)
+
+# let's again multiply
+n2 <- n2 %>% 
+  mutate(freq_rescaled = Frequency*10000000000)
+```
+
+Sort the data by year. This reveals something interesting: The phrase "war on drugs" spiked much earlier than "mass incarceration", even though modern day academics acknowledge the two ideas are closely linked.
+
+`ngramR` also comes with a function that makes it really easy to plot the data, for easy comparisons. Of course, you can also just use the website to visualize the relationships as well.
+
+```{r}
+
+ggram(c("mass incarceration","war on drugs"), 
+      year_start = 1900,
+      year_end = 2022)
+```
+
+Visualizing the data can be a good first step to be able to understand if something interesting is going on. Then, you can use the frequency values - or the differences between two frequency values - in a data analysis to draw conclusions about some sort of societal dynamic.
+
+Here's one more example. Let's visualize the use of the term "African American":
+
+```{r}
+aa <- ngram("african american",
+      year_start = 1900,
+      year_end = 2022)
+
+aa <- aa %>% 
+  mutate(freq_rescaled = Frequency*10000000000)
+
+ggram("african american",
+      year_start = 1900,
+      year_end = 2022)
+```
+
+You can see a distinct peak, and then a sharp drop off in the use of that terminology as Black has become more common in everyday writing than African American. If we look at our data, we can see that the peak occurred around 2013. Why might that be? One potential insight: Black Lives Matter began in 2013, when George Zimmerman was acquitted for shooting and killing Trayvon Martin.
+
+## rvest
+
+We're now going to turn our attention to a more difficult to use scraping package called `rvest`. This tutorial is mostly taken verbatim from [here](https://r4ds.hadley.nz/webscraping.html).
+
+### Introduction
+
+In this section of the tutorial, you'll learn the basics of CSS selectors to locate specific elements on the page, and how to use rvest functions to get data from text and attributes out of HTML and into R. We'll then discuss some techniques to figure out what CSS selector you need for the page you're scraping, before finishing up with a couple of case studies, and a brief discussion of dynamic websites.
+
+First, let's load in the package:
+
+```{r}
+library(rvest)
+```
+
+### HTML basics
+
+To scrape webpages, you need to first understand a little bit about **HTML**, the language that describes web pages. HTML stands for **H**yper**T**ext **M**arkup **L**anguage and looks something like this:
+
+``` html
+<html>
+<head>
+  <title>Page title</title>
+</head>
+<body>
+  <h1 id='first'>A heading</h1>
+  <p>Some text &amp; <b>some bold text.</b></p>
+  <img src='myimg.png' width='100' height='100'>
+</body>
+```
+
+HTML has a hierarchical structure formed by **elements** which consist of a start tag (e.g., `<tag>`), optional **attributes** (`id='first'`), an end tag[^1] (like `</tag>`), and **contents** (everything in between the start and end tag).
+
+[^1]: A number of tags (including `<p>` and `<li>)` don't require end tags, but we think it's best to include them because it makes seeing the structure of the HTML a little easier.
+
+Since `<` and `>` are used for start and end tags, you can't write them directly. Instead you have to use the HTML **escapes** `&gt;` (greater than) and `&lt;` (less than). And since those escapes use `&`, if you want a literal ampersand you have to escape it as `&amp;`. There are a wide range of possible HTML escapes but you don't need to worry about them too much because rvest automatically handles them for you.
+
+Web scraping is possible because most pages that contain data that you want to scrape generally have a consistent structure.
+
+#### Elements
+
+There are over 100 HTML elements. Some of the most important are:
+
+-   Every HTML page must be in an `<html>` element, and it must have two children: `<head>`, which contains document metadata like the page title, and `<body>`, which contains the content you see in the browser.
+
+-   Block tags like `<h1>` (heading 1), `<section>` (section), `<p>` (paragraph), and `<ol>` (ordered list) form the overall structure of the page.
+
+-   Inline tags like `<b>` (bold), `<i>` (italics), and `<a>` (link) format text inside block tags.
+
+If you encounter a tag that you've never seen before, you can find out what it does with a little googling. Another good place to start are the [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTML) which describe just about every aspect of web programming.
+
+Most elements can have content in between their start and end tags. This content can either be text or more elements. For example, the following HTML contains paragraph of text, with one word in bold.
+
+```         
+<p>
+  Hi! My <b>name</b> is Hadley.
+</p>
+```
+
+The **children** are the elements it contains, so the `<p>` element above has one child, the `<b>` element. The `<b>` element has no children, but it does have contents (the text "name").
+
+#### Attributes
+
+Tags can have named **attributes** which look like `name1='value1' name2='value2'`. Two of the most important attributes are `id` and `class`, which are used in conjunction with CSS (Cascading Style Sheets) to control the visual appearance of the page. These are often useful when scraping data off a page. Attributes are also used to record the destination of links (the `href` attribute of `<a>` elements) and the source of images (the `src` attribute of the `<img>` element).
+
+### Extracting data
+
+To get started scraping, you'll need the URL of the page you want to scrape, which you can usually copy from your web browser. You'll then need to read the HTML for that page into R with `read_html()`. This returns an `xml_document`[^2] object which you'll then manipulate using rvest functions:
+
+[^2]: This class comes from the [xml2](https://xml2.r-lib.org) package. xml2 is a low-level package that rvest builds on top of.
+
+```{r}
+html <- read_html("http://rvest.tidyverse.org/")
+html
+```
+
+rvest also includes a function that lets you write HTML inline. We'll use this a bunch as we learn how the various rvest functions work with simple examples.
+
+```{r}
+html <- minimal_html("
+  <p>This is a paragraph</p>
+  <ul>
+    <li>This is a bulleted list</li>
+  </ul>
+")
+html
+```
+
+Now that you have the HTML in R, it's time to extract the data of interest. You'll first learn about the CSS selectors that allow you to identify the elements of interest and the rvest functions that you can use to extract data from them. Then we'll briefly cover HTML tables, which have some special tools.
+
+#### Find elements
+
+CSS is short for cascading style sheets, and is a tool for defining the visual styling of HTML documents. CSS includes a miniature language for selecting elements on a page called **CSS selectors**. CSS selectors define patterns for locating HTML elements, and are useful for scraping because they provide a concise way of describing which elements you want to extract.
+
+We'll come back to CSS selectors in more detail later, but luckily you can get a long way with just three:
+
+-   `p` selects all `<p>` elements.
+
+-   `.title` selects all elements with `class` "title".
+
+-   `#title` selects the element with the `id` attribute that equals "title". Id attributes must be unique within a document, so this will only ever select a single element.
+
+Let's try out these selectors with a simple example:
+
+```{r}
+html <- minimal_html("
+  <h1>This is a heading</h1>
+  <p id='first'>This is a paragraph</p>
+  <p class='important'>This is an important paragraph</p>
+")
+```
+
+Use `html_elements()` to find all elements that match the selector:
+
+```{r}
+html %>%  html_elements("p")
+html %>%  html_elements(".important")
+html %>% html_elements("#first")
+```
+
+Another important function is `html_element()` which always returns the same number of outputs as inputs. If you apply it to a whole document it'll give you the first match:
+
+```{r}
+html %>%  html_element("p")
+```
+
+There's an important difference between `html_element()` and `html_elements()` when you use a selector that doesn't match any elements. `html_elements()` returns a vector of length 0, where `html_element()` returns a missing value. This will be important shortly.
+
+```{r}
+html %>%  html_elements("b")
+html %>%  html_element("b")
+```
+
+#### Nesting selections
+
+In most cases, you'll use `html_elements()` and `html_element()` together, typically using `html_elements()` to identify elements that will become observations, then using `html_element()` to find elements that will become variables. Let's see this in action using a simple example. Here we have an unordered list (`<ul>)` where each list item (`<li>`) contains some information about four characters from StarWars:
+
+```{r}
+html <- minimal_html("
+  <ul>
+    <li><b>C-3PO</b> is a <i>droid</i> that weighs <span class='weight'>167 kg</span></li>
+    <li><b>R4-P17</b> is a <i>droid</i></li>
+    <li><b>R2-D2</b> is a <i>droid</i> that weighs <span class='weight'>96 kg</span></li>
+    <li><b>Yoda</b> weighs <span class='weight'>66 kg</span></li>
+  </ul>
+  ")
+```
+
+We can use `html_elements()` to make a vector where each element corresponds to a different character:
+
+```{r}
+characters <- html %>%  html_elements("li")
+characters
+```
+
+To extract the name of each character, we use `html_element()`, because when applied to the output of `html_elements()` it's guaranteed to return one response per element:
+
+```{r}
+characters %>%  html_element("b")
+```
+
+The distinction between `html_element()` and `html_elements()` isn't important for name, but it is important for weight. We want to get one weight for each character, even if there's no weight `<span>`. That's what `html_element()` does:
+
+```{r}
+characters %>%  html_element(".weight")
+```
+
+#### Text and attributes
+
+`html_text2()` extracts the plain text contents of an HTML element:
+
+```{r}
+characters %>%  
+  html_element("b") %>% 
+  html_text2()
+
+characters %>% 
+  html_element(".weight") %>% 
+  html_text2()
+```
+
+`html_attr()` extracts data from attributes:
+
+```{r}
+html <- minimal_html("
+  <p><a href='https://en.wikipedia.org/wiki/Cat'cats</a></p>
+  <p><a href='https://en.wikipedia.org/wiki/Dog'dogs</a></p>
+")
+
+html %>% 
+  html_elements("p") %>% 
+  html_element("a") %>% 
+  html_attr("href")
+```
+
+`html_attr()` always returns a string, so if you're extracting numbers or dates, you'll need to do some post-processing.
+
+### Finding the right selectors {#sec-css-selectors}
+
+Figuring out the selector you need for your data is typically the hardest part of the problem. You'll often need to do some experimenting to find a selector that is both specific (i.e. it doesn't select things you don't care about) and sensitive (i.e. it does select everything you care about). Lots of trial and error is a normal part of the process!
+
+Every modern browser comes with some toolkit for developers, but Google Chrome's are some of the best and they're immediately available. Right click on an element on the page and click `Inspect`. This will open an expandable view of the complete HTML page, centered on the element that you just clicked. You can use this to explore the page and get a sense of what selectors might work. Pay particular attention to the class and id attributes, since these are often used to form the visual structure of the page, and hence make for good tools to extract the data that you're looking for.
+
+### Putting it all together
+
+Let's put this all together to scrape some websites. There's some risk that these examples may no longer work when you run them --- that's the fundamental challenge of web scraping; if the structure of the site changes, then you'll have to change your scraping code.
+
+rvest includes a very simple example in `vignette("starwars")`. This is a simple page with minimal HTML so it's a good place to start. I'd encourage you to navigate to that page now and use "Inspect Element" to inspect one of the headings that's the title of a Star Wars movie. Use the keyboard or mouse to explore the hierarchy of the HTML and see if you can get a sense of the shared structure used by each movie.
+
+You should be able to see that each movie has a shared structure that looks like this:
+
+``` html
+<section>
+  <h2 data-id="1">The Phantom Menace</h2>
+  <p>Released: 1999-05-19</p>
+  <p>Director: <span class="director">George Lucas</span></p>
+  
+  <div class="crawl">
+    <p>...</p>
+    <p>...</p>
+    <p>...</p>
+  </div>
+</section>
+```
+
+Our goal is to turn this data into a 7 row data frame with variables `title`, `year`, `director`, and `intro`. We'll start by reading the HTML and extracting all the `<section>` elements:
+
+```{r}
+url <- "https://rvest.tidyverse.org/articles/starwars.html"
+html <- read_html(url)
+
+section <- html %>%  html_elements("section")
+section
+```
+
+This retrieves seven elements matching the seven movies found on that page, suggesting that using `section` as a selector is good. Extracting the individual elements is straightforward since the data is always found in the text. It's just a matter of finding the right selector:
+
+```{r}
+section %>%  html_element("h2") %>%  html_text2()
+
+section %>%  html_element(".director") %>%  html_text2()
+```
+
+Once we've done that for each component, we can wrap all the results up into a tibble:
+
+```{r}
+tibble(
+  title = section %>%  
+    html_element("h2") %>% 
+    html_text2(),
+  released = section %>% 
+    html_element("p") %>% 
+    html_text2() %>% 
+    str_remove("Released: ") %>% 
+    parse_date(),
+  director = section %>% 
+    html_element(".director") %>% 
+    html_text2(),
+  intro = section %>% 
+    html_element(".crawl") %>% 
+    html_text2()
+)
+```
+
+Remember, almost any static website can be scraped using `rvest`. This can be useful for gathering a lot of information at once, especially if the information is organized in some sort of list. Alternatively, can be useful to simply download the content of a webpage, and then analyze the text on the webpage later on. Next week's class will focus on analyzing text and working with text data.

@@ -1,0 +1,66 @@
+---
+title: "Lab Assignment DUE 9/24"
+output: html_document
+---
+
+Lab Assignment #2 - you've got this!! In this assignment, you'll practice some of the skills we learned in class on 9/17, including grouping/summarizing data, filtering data, and merging data sources.
+
+It's okay for you to Google or use Chat-GPT for help on specific questions. But remember that this is graded for **EFFORT**, not accuracy. I'd rather you attempt something on your own and it be wrong than it be perfectly correct but you have no clue what it means.
+
+First prove to me that the number 24 is in (hint: **%in%**) the range of numbers from 20 to 30.
+
+```{r}
+
+```
+
+**Load** in the package that you need to flexibly work with data. (Hint: It's the only package we've been using.)
+
+```{r}
+
+```
+
+**Bring in** **and save** the csv file called `CCRB_officers.csv`.
+
+```{r}
+
+```
+
+**Make a new column** that indicates the percentage of complaints that are substantiated for each officer.
+
+```{r}
+
+```
+
+Excluding officers with no complaints, what is the **average** % substantiated complaints across all officers?
+
+```{r}
+
+```
+
+Now, show me the **average number of complaints for each gender**. (Hint: `group_by()` and `summarize()` will come in handy here.)
+
+```{r}
+
+```
+
+**Make a new variable** that binarizes the rank variable, and simply tells us whether the rank is police officer, or higher than police officer.
+
+```{r}
+
+```
+
+Bring in the `CCRB_penalties.csv` dataset.
+
+```{r}
+
+```
+
+**Combine** the two dataframes into one, **joining** by the Tax_ID variable.
+
+```{r}
+
+```
+
+You're done!
+
+To show me you've finished, click the Knit button above. That will create either an HTML or PDF version of this document, and will save it in your project folder.
